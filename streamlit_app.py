@@ -48,7 +48,6 @@ def multiselect_filter(df, col, label=None):
 df_f = df.copy()
 df_f = multiselect_filter(df_f, "industry", "Branża")
 df_f = multiselect_filter(df_f, "fav_place", "Ulubione miejsce")
-df_f = multiselect_filter(df_f, "hobby", "Hobby")
 
 # ---------- Klastrowanie (wariant minimalny) ----------
 @st.cache_resource
@@ -148,15 +147,15 @@ with col2:
     else:
         st.info("Brak kolumny 'fav_place' lub danych.")
 
-# dodatkowo: hobby
-if "hobby" in cluster_data.columns and cluster_data["hobby"].notna().any():
-    st.subheader("🎯 Hobby — Top 10")
-    hob_counts = cluster_data["hobby"].value_counts().head(10)
-    fig, ax = plt.subplots()
-    ax.bar(hob_counts.index.astype(str), hob_counts.values)
-    ax.set_title(f"Hobby — Grupa {int(cluster_desc)}")
-    ax.tick_params(axis="x", rotation=45)
-    st.pyplot(fig)
+# ---------- Filtry binarne ----------
+binary_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
+
+for col in binary_cols:
+    if col in df.columns:
+        choice = st.sidebar.radio(f"{col}", ["Wszystko", "tak", "nie"], index=0)
+        if choice != "Wszystko":
+            df_f = df_f[df_f[col].astype(str).str.lower() == choice]
+
 
 # ---------- Śmieszne podsumowanie ----------
 def funny_summary(df_subset: pd.DataFrame) -> str:
