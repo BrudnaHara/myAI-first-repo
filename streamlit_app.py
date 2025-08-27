@@ -152,11 +152,13 @@ binary_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivati
 
 for col in binary_cols:
     if col in df_f.columns:
-        # normalizacja kolumny do małych liter bez spacji
-        df_f[col] = df_f[col].astype(str).str.strip().str.lower()
+        # zamień 1 -> "tak", 0 -> "nie"
+        df_f[col] = df_f[col].map({1: "tak", 0: "nie"}).astype(str)
+        
         choice = st.sidebar.radio(f"{col}", ["Wszystko", "tak", "nie"], index=0)
         if choice != "Wszystko":
             df_f = df_f[df_f[col] == choice]
+
 
 # ---------- Śmieszne podsumowanie ----------
 def funny_summary(df_subset: pd.DataFrame) -> str:
