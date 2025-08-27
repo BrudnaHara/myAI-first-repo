@@ -49,6 +49,18 @@ df_f = df.copy()
 df_f = multiselect_filter(df_f, "industry", "Branża")
 df_f = multiselect_filter(df_f, "fav_place", "Ulubione miejsce")
 
+# ---------- Filtry binarne (0/1 → tak/nie w UI, filtrowanie po liczbie) ----------
+binary_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
+
+for col in binary_cols:
+    if col in df_f.columns:
+        s = pd.to_numeric(df_f[col], errors="coerce")  # działa dla 0,1 oraz "0","1"
+        choice = st.sidebar.radio(f"{col}", ["Wszystko", "tak", "nie"], index=0)
+        if choice != "Wszystko":
+            want = 1 if choice == "tak" else 0
+            df_f = df_f[s == want]
+
+
 # ---------- Klastrowanie (wariant minimalny) ----------
 @st.cache_resource
 def prepare_clustering(data: pd.DataFrame, n_clusters: int = 5):
@@ -146,19 +158,6 @@ with col2:
         st.pyplot(fig)
     else:
         st.info("Brak kolumny 'fav_place' lub danych.")
-
-# ---------- Filtry binarne ----------
-binary_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
-
-for col in binary_cols:
-    if col in df_f.columns:
-        # zamień 1 -> "tak", 0 -> "nie"
-        df_f[col] = df_f[col].map({1: "tak", 0: "nie"}).astype(str)
-        
-        choice = st.sidebar.radio(f"{col}", ["Wszystko", "tak", "nie"], index=0)
-        if choice != "Wszystko":
-            df_f = df_f[df_f[col] == choice]
-
 
 # ---------- Śmieszne podsumowanie ----------
 def funny_summary(df_subset: pd.DataFrame) -> str:
