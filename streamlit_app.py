@@ -61,7 +61,6 @@ for col in binary_cols:
             df_f = df_f[s == want]
 
 if df_f.empty:
-    st.header("👋 Nerdy jak Ty XD")
     st.write("you weirdo as fuck XD")
     st.stop()
 
@@ -189,4 +188,4 @@ target_df = same_cluster if not same_cluster.empty else df_clust
 st.write(funny_summary(target_df))
 
 st.markdown("---")
-st.caption("Charakterystyka: industry + fav_place. Sekcja nearest-cluster usunięta w wariancie minimalnym.")
+st.caption("Kto to czyta ten mieszka w piwnicy XD")
