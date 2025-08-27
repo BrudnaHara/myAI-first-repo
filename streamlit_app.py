@@ -89,31 +89,19 @@ df_view.loc[res["kept_idx"], "cluster"] = res["clusters"]
 df_clust = df_view.dropna(subset=["cluster"]).copy()
 df_clust["cluster"] = df_clust["cluster"].astype(int)
 
-# ---------- Wybór użytkownika ----------
-st.sidebar.header("🔍 Znajdź swoją grupę")
-user_index_options = df_clust.index.tolist()
-if not user_index_options:
-    st.info("Brak rekordów z przypisanym klastrem.")
+# ---------- Auto-wybór grupy ----------
+mode_series = df_clust["cluster"].mode()
+if mode_series.empty:
+    st.info("Brak przypisanych klastrów po filtrach.")
     st.stop()
 
-def user_label(idx):  # prosta etykieta bez wieku
-    return f"User {int(idx)}"
+selected_cluster = int(mode_series.iloc[0])
+same_cluster = df_clust[df_clust["cluster"] == selected_cluster]
 
-user_choice = st.sidebar.selectbox(
-    "Wybierz swój profil:",
-    options=[user_label(i) for i in user_index_options]
-)
-user_id = int(user_choice.split()[1])
+st.sidebar.header("📌 Wybrana grupa")
+st.sidebar.write(f"Automatycznie wybrano **grupę {selected_cluster}**.")
+st.sidebar.metric("Liczba osób w grupie", len(same_cluster))
 
-if user_id not in df_clust.index:
-    st.info("Wybrany użytkownik nie istnieje po filtrach.")
-    st.stop()
-
-user_cluster = int(df_clust.loc[user_id, "cluster"])
-same_cluster = df_clust[df_clust["cluster"] == user_cluster]
-
-st.sidebar.success(f"Jesteś w grupie {user_cluster}")
-st.sidebar.metric("Osób w twojej grupie", len(same_cluster))
 
 # ---------- Sekcja główna ----------
 st.header("👋 Twoja grupa znajomych")
@@ -132,8 +120,9 @@ else:
 # ---------- Charakterystyka grup ----------
 st.header("📊 Charakterystyka grup")
 clusters_available = sorted(df_clust["cluster"].unique().tolist())
-default_idx = clusters_available.index(user_cluster) if user_cluster in clusters_available else 0
+default_idx = clusters_available.index(selected_cluster) if selected_cluster in clusters_available else 0
 cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_available, index=default_idx)
+
 cluster_data = df_clust[df_clust["cluster"] == cluster_desc]
 st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
 
@@ -158,6 +147,16 @@ with col2:
         st.pyplot(fig)
     else:
         st.info("Brak kolumny 'fav_place' lub danych.")
+
+# dodatkowo: hobby
+if "hobby" in cluster_data.columns and cluster_data["hobby"].notna().any():
+    st.subheader("🎯 Hobby — Top 10")
+    hob_counts = cluster_data["hobby"].value_counts().head(10)
+    fig, ax = plt.subplots()
+    ax.bar(hob_counts.index.astype(str), hob_counts.values)
+    ax.set_title(f"Hobby — Grupa {int(cluster_desc)}")
+    ax.tick_params(axis="x", rotation=45)
+    st.pyplot(fig)
 
 # ---------- Śmieszne podsumowanie ----------
 def funny_summary(df_subset: pd.DataFrame) -> str:
