@@ -108,7 +108,8 @@ if "age" in df_enc.columns:
 cat_cols_cfg = ["edu_level", "fav_place", "gender", "industry", "city", "fav_animals"]
 cat_cols = [c for c in cat_cols_cfg if c in df_enc.columns]
 
-dummies = pd.get_dummies(df_enc[cat_cols], prefix=cat_cols, dummy_na=False) if cat_cols else pd.DataFrame(index=df_enc.index)
+dummies = pd.get_dummies(df_enc[cat_cols], dummy_na=False) if cat_cols else pd.DataFrame(index=df_enc.index)
+
 
 # numeryczne bazowe: wszystkie 0/1 (hobby_*, learning_*, motivation_*, + age_num)
 df_enc = df_enc.apply(lambda s: pd.to_numeric(s, errors="ignore"))
