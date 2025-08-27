@@ -115,18 +115,12 @@ st.sidebar.metric("Liczba osób w grupie", len(same_cluster))
 
 
 # ---------- Sekcja główna ----------
-st.header("👋 Twoja grupa znajomych")
-st.write(f"Znaleziono {len(same_cluster)} osób podobnych do Ciebie!")
-st.dataframe(same_cluster)
-
-# Lista userów na dole z grupą wiekową
-st.subheader("👣 Uczestnicy z Twojej grupy (z przedziałem wieku)")
-if "age_group" in df_clust.columns:
-    listing = same_cluster.copy()
-    listing["age_group"] = listing["age_group"].fillna("unknown")
-    st.dataframe(listing[[c for c in ["age","age_group","industry","fav_place","cluster"] if c in listing.columns]])
+st.header("👋 Nerdy jak Ty XD")
+if same_cluster.empty:
+    st.write("you weirdo as fuck XD")
 else:
-    st.dataframe(same_cluster[[c for c in ["age","industry","fav_place","cluster"] if c in same_cluster.columns]])
+    st.write(f"Znaleziono {len(same_cluster)} osób podobnych do Ciebie!")
+    st.dataframe(same_cluster)
 
 # ---------- Charakterystyka grup ----------
 st.header("📊 Charakterystyka grup")
