@@ -60,6 +60,11 @@ for col in binary_cols:
             want = 1 if choice == "tak" else 0
             df_f = df_f[s == want]
 
+if df_f.empty:
+    st.header("👋 Nerdy jak Ty XD")
+    st.write("you weirdo as fuck XD")
+    st.stop()
+
 
 # ---------- Klastrowanie (wariant minimalny) ----------
 @st.cache_resource
@@ -90,7 +95,8 @@ def prepare_clustering(data: pd.DataFrame, n_clusters: int = 5):
 
 res = prepare_clustering(df_f, k_choice)
 if res is None:
-    st.info("Brak danych do klastrowania po filtrach lub brak cech numerycznych.")
+    st.header("👋 Nerdy jak Ty XD")
+    st.write("you weirdo as fuck XD")
     st.stop()
 
 # wstrzyknij etykiety do tabeli
@@ -99,11 +105,17 @@ df_view["cluster"] = np.nan
 df_view.loc[res["kept_idx"], "cluster"] = res["clusters"]
 df_clust = df_view.dropna(subset=["cluster"]).copy()
 df_clust["cluster"] = df_clust["cluster"].astype(int)
+if df_clust.empty:
+    st.header("👋 Nerdy jak Ty XD")
+    st.write("you weirdo as fuck XD")
+    st.stop()
+
 
 # ---------- Auto-wybór grupy ----------
 mode_series = df_clust["cluster"].mode()
 if mode_series.empty:
-    st.info("Brak przypisanych klastrów po filtrach.")
+    st.header("👋 Nerdy jak Ty XD")
+    st.write("you weirdo as fuck XD")
     st.stop()
 
 selected_cluster = int(mode_series.iloc[0])
