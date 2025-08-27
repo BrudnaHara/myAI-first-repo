@@ -1,0 +1,292 @@
+ŚWIETNY WYBÓR! Do AI, RAG i aplikacji opartych na LLM polecam Pythona 3.12 – jest stabilny, dobrze zoptymalizowany i ma pełne wsparcie dla najnowszych bibliotek AI. 🐍🚀
+🧠 DLACZEGO PYTHON 3.12?
+
+    Szybsze wykonanie kodu: nawet do 5–15% w porównaniu do 3.11 dzięki optymalizacjom interpretera.
+
+    Lepsze zarządzanie pamięcią: przydatne przy dużych modelach LLM i vector databases.
+
+    Pełne wsparcie bibliotek: transformers, langchain, llama-index, chromadb działają bez problemu.
+
+📦 JAK ZAINSTALOWAĆ NA DEBIANIE?
+bash
+
+sudo apt update  
+sudo apt install python3.12 python3.12-venv python3.12-dev  
+
+Dlaczego python3.12-dev? Bo będziesz potrzebować nagłówków Pythona do kompilacji niektórych pakietów (np. llama-cpp-python).
+🛠️ NAJWAŻNIEJSZE BIBLIOTEKI DO RAG/AI:
+
+    LangChain – do łączenia LLM z danymi i narzędziami.
+
+    ChromaDB – lekka baza danych do przechowywania embeddingów.
+
+    Hugging Face transformers – do lokalnych modeli LLM.
+
+    OpenAI/DeepSeek API – jeśli wolisz chmurę.
+
+    FastAPI/Flask – do wystawienia modelu jako API.
+
+🔥 EXTRA TIP: UŻYJ VENV!
+
+Zawsze pracuj w wirtualnym środowisku:
+bash
+
+python3.12 -m venv my_ai_env  
+source my_ai_env/bin/activate  
+
+To uchroni systemowego Pythona przed bałaganem.
+
+JEŚLI CHCESZ, ŻEBYŚMY RAZEM ZAINSTALOWALI I URUCHOMILI PIERWSZY SKRYPT RAG – DAJ ZNAĆ!
+Mogę poprowadzić Cię krok po kroku. 😎
+będziemy działać na kursie póki co, to taki kurs w którym uczą się mniej niż ja umiem XD ale chce go przeklepać, żeby mieć zakończony. RAGów tam nie robią na tym kursie, to taki ogólny kurs Data Scientist, najpierw teoria, potem rzeczy dot analityki (moja ostatnia praca to był analityk biznesowy, więc tam też szybko pójdzie) potem python (tak usnę, bo uczenie się teorii o pythonie mnie usypia) a potem bibliteki pythona, a potem budowanie jakiejś prostej aplikacji. na koncu coś o narzędziach pracy ogólnie w zespole. ogarniemy to szybko. czyli zaczynam od krok1, czyli instaluje pythona. jak skończę napiszę done i wtedy krok 2, czyli środowisko w python. od teraz działamy indukcyjnie spowrotem, krok po kroku, ja informuje, ze krok wykonany i idziemy dalej. właczamy oszczędnośc tokenów, żebyś się nie przeciążał.
+
+Zrozumiałem! Działamy indukcyjnie, krok po kroku, z oszczędnością tokenów. Jestem gotowy.
+🐍 KROK 1: Instalacja Pythona 3.12 na Debianie
+
+Wykonaj w terminalu:
+bash
+
+sudo apt update  
+sudo apt install python3.12 python3.12-venv python3.12-dev  
+
+Czekam na potwierdzenie, gdy będzie done. 🫡
+
+(P.S. Świetnie, że omijasz niepotrzebną teorię – skupiamy się na praktyce!)
+w tym tmux, się jakoś inaczej chyba zaznacza i kopiuje, bo mam błędy, chce ci zaznaczyć i wysłać, ale zaznaczam i jak puszczam, żeby skopiować tę częśc to się odznacza, normalnie w terminalu to się da zrobić. help
+
+W tmux zaznaczenie i kopiowanie działa inaczej niż w standardowym terminalu.
+Tmux blokuje domyślne zaznaczanie myszką – musisz użyć trybu kopiowania tmux.
+🖱️ JAK ZAZNACZYĆ I SKOPIOWAĆ TEKST W TMUX?
+
+    Wejdź w tryb kopiowania:
+    Naciśnij Ctrl + A (lub twój prefix), a potem [ (lewym nawiasem).
+    → Teraz możesz zaznaczać tekst strzałkami (bez myszki).
+
+    Zaznacz tekst:
+    Przesuwaj kursor strzałkami, aby zaznaczyć fragment.
+
+    Skopiuj zaznaczenie:
+    Naciśnij Enter – tekst zostanie skopiowany do schowka tmux.
+
+    Wklej gdzie chcesz:
+    Naciśnij Ctrl + A + ] (prawym nawiasem).
+
+⚡ JAK WKLEIĆ TEKST NA ZEWNĄTRZ TMUX?
+
+Tekst skopiowany w tmux jest w schowku tmux, nie systemowym.
+Aby go przekopiować na zewnątrz:
+
+    Wklej najpierw wewnątrz tmux (np. do pliku lub nowego okna),
+
+    a potem skopiuj standardowo (myszką lub Ctrl+Shift+C).
+
+ALTERNATYWA: Użyj myszki z wciśniętym Shiftem
+Jeśli chcesz użyć myszki:
+
+    Przytrzymaj Shift
+
+    Zaznacz tekst myszką
+
+    Kliknij prawym przyciskiem → „Kopiuj”
+
+Czy teraz działa? 🐧
+SPOKOJNIE – TO NIE BŁĄD, TYLKO DEBIAN TRIXIE NIE MA JUŻ PYTHONA 3.12 W OFICJALNYCH REPOZYTORIACH!
+Python 3.12 został zastąpiony Pythonem 3.13 (bo Trixie to wersja testingowa).
+🐍 POPRAWNA KOMENDA:
+
+Zamiast python3.12, użyj:
+bash
+
+sudo apt install python3 python3-venv python3-dev  
+
+To zainstaluje domyślną wersję Pythona w Debianie Trixie (obecnie 3.13).
+🔍 DLACZEGO TO SIĘ STAŁO?
+
+    Debian Trixie używa Pythona 3.13 jako domyślnego.
+
+    Paczka python3 zawsze wskazuje na najnowszą stabilną wersję.
+
+    python3-venv i python3-dev też są powiązane z domyślną wersją.
+
+✅ JAK TO NAPRAWIĆ?
+
+    Instalujemy domyślny Python:
+    bash
+
+sudo apt install python3 python3-venv python3-dev  
+
+Sprawdzamy wersję:
+bash
+
+    python3 --version  
+
+    Powinno pokazać: Python 3.13.x
+
+JEŚLI CHCESZ PYTHONA 3.12 (np. dla kompatybilności):
+Musisz dodać zewnętrzne repozytorium (np. deadsnakes), ale nie polecam – lepiej używać domyślnej wersji.
+
+Czy chcesz, żebym poprowadził Cię przez instalację?
+Mogę też pokazać, jak stworzyć venv i zacząć kurs data science! 🐍🚀
+ok done. mam python 3.13.5 idziemy kolejny krok. ready
+
+SUPER! 🐍 Python 3.13.5 jest gotowy!
+Czas na virtual environment (venv) – to izolowane środowisko, żeby pakiety z kursu nie mieszały Ci się z systemowymi.
+🚀 KROK 1: STWÓRZ KATALOG NA KURS I WEJDŹ DO NIEGO
+bash
+
+mkdir ~/data_science_course  
+cd ~/data_science_course  
+
+🚀 KROK 2: UTWÓRZ VIRTUAL ENVIRONMENT
+bash
+
+python3 -m venv venv  
+
+To stworzy katalog venv z izolowanym Pythonem i pipem.
+🚀 KROK 3: AKTYWUJ ŚRODOWISKO
+bash
+
+source venv/bin/activate  
+
+Twoja linia poleceń powinna pokazać teraz (venv) na początku.
+🚀 KROK 4: INSTALUJ PAKIETY (np. pandas, jupyter)
+bash
+
+pip install pandas numpy jupyter  
+PEŁNA LISTA BIBLIOTEK DO DATA SCIENCE + RAG + APLIKACJE:
+Wykonaj krok po kroku w swoim aktywowanym środowisku venv:
+🚀 KROK 1: AKTYWUJ ŚRODOWISKO (jeśli nieaktywne)
+bash
+
+source ~/data_science_course/venv/bin/activate
+
+🚀 KROK 2: INSTALUJ PODSTAWOWE BIBLIOTEKI DO ANALIZY DANYCH
+bash
+
+pip install pandas numpy scipy scikit-learn matplotlib seaborn plotly
+
+🚀 KROK 3: BIBLIOTEKI DO UCZENIA MASZYNOWEGO I GŁĘBOKIEGO
+bash
+
+pip install tensorflow torch torchvision transformers
+
+🚀 KROK 4: NARZĘDZIA DO RAG (RETRIEVAL-AUGMENTED GENERATION)
+bash
+
+pip install langchain chromadb sentence-transformers pypdf openai
+
+🚀 KROK 5: BIBLIOTEKI DO APLIKACJI WEBOWYCH/API
+bash
+
+pip install flask fastapi uvicorn requests
+
+🚀 KROK 6: NARZĘDZIA DO PRACY Z NOTEBOOKAMI I LOGOWANIEM
+bash
+
+pip install jupyterlab ipykernel notebook
+
+🚀 KROK 7: DODATKOWE (OPTIONAL) – DO ZAAWANSOWANYCH PROJEKTÓW
+bash
+
+pip install xgboost lightgbm catboost nltk spacy gensim
+
+✅ SPRAWDŹ, CZY WSZYSTKO ZAINSTALOWANE
+bash
+
+pip list
+
+INDUKCYJNIE:
+Czekam na potwierdzenie, czy wszystko poszło gładko. Jeśli tak – idziemy dalej! 🐍🔥
+krok 4 mnie uśpił, to się ściąga i ściąga XD jestem jakby co na kroku 4 cały czas, eta 14 min XD
+
+USYPIAJĄCE ŚCIĄGANIE PAKIETÓW TO ZNAK, ŻE TWORZYSZ POTĘŻNE ŚRODOWISKO! 😴⚡
+Krok 4 (RAG) to właśnie te ciężkie biblioteki – langchain, transformers, sentence-transformers – które mają duże zależności. To normalne, że to trwa!
+🕐 CO MOŻESZ ZROBIĆ W TRAKCIE?
+
+    Otwórz nowy terminal (obok) i sprawdź postęp:
+    bash
+
+    watch -n 5 'ps aux | grep pip'  # co 5 sekund pokazuje, czy pip jeszcze żyje  
+
+    Albo po prostu zrób sobie herbatę – to potrwa. 🍵
+
+🚀 KIEDY SIĘ SKOŃCZY, IDZIEMY DALEJ:
+
+    Sprawdzimy, czy wszystko zostało zainstalowane (pip list).
+
+    Przetestujemy podstawowy import (czy nie ma błędów).
+
+    Zaczniemy kurs data science od pierwszego modułu.
+
+CIEKAWOSTKA:
+Biblioteki do RAG (jak langchain) są tak potężne, że potem możesz budować własne ChatGPT na swoich danych.
+Warto poczekać! 🦾
+
+Daj znać, gdy się zakończy – albo jeśli pip zwróci błąd. 🐍💥
+nie mogę się doczekać jak zbuduję chatdeepseek na swoich danych XD
+
+BĘDZIE MOC! 🚀
+Budowanie własnego DeepSeek na swoich danych to właśnie esencja RAG (Retrieval-Augmented Generation)!
+🧠 JAK TO DZIAŁA W PRAKTYCE?
+
+    Zbierasz swoje dane (notatki, PDFy, bazy danych).
+
+    Tworzysz wektorową bazę wiedzy (np. z chromadb).
+
+    Podłączasz model LLM (DeepSeek via API) i każesz mu szukać odpowiedzi w Twojej bazie.
+
+    Masz własnego chatbota, który zna Twoje specyficzne informacje!
+
+🛠️ PRZYKŁADOWY SKRUTP RAG (KIEDY BIBLIOTEKI SIĘ ZAINSTALUJĄ):
+python
+
+from langchain.vectorstores import Chroma  
+from langchain.embeddings import SentenceTransformerEmbeddings  
+from langchain.llms import DeepSeek  
+from langchain.chains import RetrievalQA  
+
+# Krok 1: Przygotuj embeddery (tłumaczą tekst na wektory)  
+embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")  
+
+# Krok 2: Załaduj swoje dane do bazy wektorowej  
+vector_db = Chroma.from_texts(["Twoje notatki o Linuxie..."], embeddings)  
+
+# Krok 3: Podłącz DeepSeek  
+llm = DeepSeek(api_key="twoj_klucz")  
+qa_chain = RetrievalQA.from_chain_type(llm, retriever=vector_db.as_retriever())  
+
+# Krok 4: Zapytaj!  
+answer = qa_chain.run("Jak skonfigurować tmux?")  
+print(answer)  
+
+TO JEST DOPIERO POCZĄTEK – POTEM MOŻESZ GO INTEGROWAĆ Z APLIKACJĄ WEBOWĄ (Flask/FastAPI)!
+
+Czy pip już skończył? Jeśli tak, jedziemy dalej! Jeśli nie – czekamy jak na premierę filmu. 🍿
+
+Gotowe! 🎉
+Masz już:
+
+    Izolowane środowisko Pythona 3.13.5
+
+    Zainstalowane podstawowe pakiety do data science
+
+Czy chcesz teraz uruchomić Jupyter Notebook czy idziemy w kod?
+Mogę poprowadzić Cię krok po kroku!
+# SYSTEM:  
+OS=Debian 13 Trixie  
+Python=3.13.5  
+Terminal=tmux (prefix: Ctrl+A)  
+Edytor=nano  
+Brak myszki – tylko klawiatura  
+
+# PROJEKTY:  
+Kurs data science: ~/data_science_course  
+Virtual env: ~/data_science_course/venv  
+Skrypt tmux: ~/tmux-3-panele.sh  
+
+# STYL PRACY:  
+Indukcyjnie – krok po kroku  
+Precyzyjne odpowiedzi, zero przeciążania  deep seek prompt
+
+cd ~ && clear
+
