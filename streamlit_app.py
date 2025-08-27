@@ -32,12 +32,6 @@ if df.empty:
 st.sidebar.header("⚙️ Ustawienia")
 k_choice = st.sidebar.slider("Liczba klastrów", 1, 10, 5, 1)
 
-# Gender filter
-gender_opts = []
-if "gender_num" in df.columns:
-    g_map = {"Kobieta (1.0)":1.0, "Mężczyzna (0.0)":0.0}
-    gender_opts = st.sidebar.multiselect("Płeć (numerycznie)", options=list(g_map.keys()))
-
 def multiselect_filter(df, col, label=None):
     if col in df.columns:
         opts = sorted(df[col].dropna().unique().tolist())
@@ -45,21 +39,28 @@ def multiselect_filter(df, col, label=None):
         if sel:
             return df[df[col].isin(sel)]
     return df
+
 df_f = df.copy()
+# kategoryczne
 df_f = multiselect_filter(df_f, "industry", "Branża")
 df_f = multiselect_filter(df_f, "fav_place", "Ulubione miejsce")
+df_f = multiselect_filter(df_f, "edu_level", "Wykształcenie")
+df_f = multiselect_filter(df_f, "gender", "Płeć")  # tekstowe, nie numeryczne
+df_f = multiselect_filter(df_f, "fav_animals", "Ulubione zwierzę")
+df_f = multiselect_filter(df_f, "city", "Miasto")  # jeśli masz
 
-# ---------- Filtry binarne (0/1 → tak/nie w UI, filtrowanie po liczbie) ----------
-binary_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
+# binarne 0/1 → tak/nie
+with st.sidebar.expander("Preferencje i motywacje"):
+    binary_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
+    for col in binary_cols:
+        if col in df_f.columns:
+            s = pd.to_numeric(df_f[col], errors="coerce")  # akceptuje 0/1 i "0"/"1"
+            choice = st.sidebar.radio(col, ["Wszystko", "tak", "nie"], index=0, horizontal=True)
+            if choice != "Wszystko":
+                want = 1 if choice == "tak" else 0
+                df_f = df_f[s == want]
 
-for col in binary_cols:
-    if col in df_f.columns:
-        s = pd.to_numeric(df_f[col], errors="coerce")  # działa dla 0,1 oraz "0","1"
-        choice = st.sidebar.radio(f"{col}", ["Wszystko", "tak", "nie"], index=0)
-        if choice != "Wszystko":
-            want = 1 if choice == "tak" else 0
-            df_f = df_f[s == want]
-
+# brak wyników po filtrach
 if df_f.empty:
     st.write("you weirdo as fuck XD")
     st.stop()
@@ -91,8 +92,37 @@ def prepare_clustering(data: pd.DataFrame, n_clusters: int = 5):
         clusters = kmeans.fit_predict(X)
 
     return {"clusters": clusters, "features": features, "kept_idx": clean.index.to_list(), "k": k}
+# ---------- Preprocessing: age → liczba, kategorie → one-hot ----------
+df_enc = df_f.copy()
 
-res = prepare_clustering(df_f, k_choice)
+# age: mapuj przedziały na środki (dopasuj do swoich etykiet)
+if "age" in df_enc.columns:
+    age_map = {
+        "<18": 16, "18-24": 21, "18–24": 21,
+        "25-34": 29.5, "35-44": 39.5, "45-54": 49.5,
+        "55-64": 59.5, ">=65": 70, "unknown": np.nan
+    }
+    df_enc["age_num"] = df_enc["age"].map(age_map)
+
+# kolumny kategoryczne do one-hot (użyj tylko tych, które masz)
+cat_cols_cfg = ["edu_level", "fav_place", "gender", "industry", "city", "fav_animals"]
+cat_cols = [c for c in cat_cols_cfg if c in df_enc.columns]
+
+dummies = pd.get_dummies(df_enc[cat_cols], prefix=cat_cols, dummy_na=False) if cat_cols else pd.DataFrame(index=df_enc.index)
+
+# numeryczne bazowe: wszystkie 0/1 (hobby_*, learning_*, motivation_*, + age_num)
+df_enc = df_enc.apply(lambda s: pd.to_numeric(s, errors="ignore"))
+num_base = df_enc.select_dtypes(include=[np.number])
+# dołącz age_num, jeśli jeszcze nie weszło
+if "age_num" in df_enc.columns and "age_num" not in num_base.columns:
+    num_base = pd.concat([num_base, df_enc[["age_num"]]], axis=1)
+
+# finalny numeric dataframe do klastrowania
+df_num = pd.concat([num_base, dummies], axis=1)
+df_num = df_num.dropna(axis=1, how="all")
+df_num = df_num.loc[:, df_num.nunique() > 1]
+
+res = prepare_clustering(df_num, k_choice)
 if res is None:
     st.header("👋 Nerdy jak Ty XD")
     st.write("you weirdo as fuck XD")
@@ -142,27 +172,43 @@ cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_avai
 cluster_data = df_clust[df_clust["cluster"] == cluster_desc]
 st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
 
-col1, col2 = st.columns(2)
-with col1:
-    if "industry" in cluster_data.columns and cluster_data["industry"].notna().any():
-        ind_counts = cluster_data["industry"].value_counts()
-        fig, ax = plt.subplots()
-        ax.pie(ind_counts.values, labels=ind_counts.index, autopct="%1.1f%%")
-        ax.set_title(f"Branże — Grupa {int(cluster_desc)}")
-        st.pyplot(fig)
-    else:
-        st.info("Brak kolumny 'industry' lub danych.")
+# KOL_1: kategorie tekstowe (więcej pól)
+cat_cols_cfg = ["industry", "fav_place", "edu_level", "gender", "fav_animals", "city"]
+present_cat = [c for c in cat_cols_cfg if c in cluster_data.columns and cluster_data[c].notna().any()]
 
-with col2:
-    if "fav_place" in cluster_data.columns and cluster_data["fav_place"].notna().any():
-        place_counts = cluster_data["fav_place"].value_counts().head(10)
-        fig, ax = plt.subplots()
-        ax.bar(place_counts.index.astype(str), place_counts.values)
-        ax.set_title(f"Ulubione miejsca — Grupa {int(cluster_desc)}")
-        ax.tick_params(axis="x", rotation=45)
-        st.pyplot(fig)
-    else:
-        st.info("Brak kolumny 'fav_place' lub danych.")
+if not present_cat:
+    st.info("Brak danych kategorycznych do pokazania.")
+else:
+    cols = st.columns(2)
+    for i, c in enumerate(present_cat):
+        with cols[i % 2]:
+            vc = cluster_data[c].value_counts()
+            if len(vc) == 0:
+                continue
+            fig, ax = plt.subplots()
+            if len(vc) <= 8:
+                ax.pie(vc.values, labels=vc.index.astype(str), autopct="%1.1f%%")
+            else:
+                top = vc.head(10)
+                ax.bar(top.index.astype(str), top.values)
+                ax.tick_params(axis="x", rotation=45)
+            ax.set_title(f"{c} — Grupa {int(cluster_desc)}")
+            st.pyplot(fig)
+
+# KOL_2: podsumowanie pól binarnych 0/1
+st.subheader("🔧 Preferencje i motywacje (udział TAK)")
+bin_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
+bin_present = [c for c in bin_cols if c in cluster_data.columns]
+
+if bin_present:
+    summary = []
+    for c in bin_present:
+        s = pd.to_numeric(cluster_data[c], errors="coerce")
+        p = float((s == 1).mean()*100) if s.notna().any() else 0.0
+        summary.append((c, f"{p:.0f}%"))
+    st.table(pd.DataFrame(summary, columns=["cecha", "TAK"]))
+else:
+    st.info("Brak pól binarnych do podsumowania.")
 
 # ---------- Śmieszne podsumowanie ----------
 def funny_summary(df_subset: pd.DataFrame) -> str:
