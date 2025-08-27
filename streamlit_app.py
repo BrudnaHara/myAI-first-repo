@@ -15,7 +15,6 @@ def load_data(default_path: str = "35__welcome_survey_cleaned.csv") -> pd.DataFr
     p = Path(default_path)
     if p.exists():
         return pd.read_csv(p, sep=";")
-    # fallback: pozwól wgrać plik ręcznie
     return pd.DataFrame()
 
 df = load_data()
@@ -28,63 +27,65 @@ if df.empty:
     else:
         st.stop()
 
+# ---------- Mapowanie płci ----------
+if "gender" in df.columns:
+    df["gender_num"] = df["gender"].map({"female": 1.0, "woman": 1.0, "kobieta": 1.0,
+                                         "male": 0.0, "man": 0.0, "mężczyzna": 0.0})
+    # w razie gdyby kolumna gender miała już liczby
+    df["gender_num"] = df["gender_num"].fillna(df["gender"])
+
 # ---------- Funkcje ----------
 @st.cache_resource
 def prepare_clustering(data: pd.DataFrame, n_clusters: int = 5):
-    # tylko kolumny numeryczne
     numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
     cols_to_remove = [c for c in ["id"] if c in numeric_cols]
     features = [c for c in numeric_cols if c not in cols_to_remove]
 
-    if len(features) == 0:
-        raise ValueError("Brak kolumn numerycznych do klastrowania.")
-
-    # usuń wiersze z brakami tylko w używanych cechach
-    clean = data.copy()
-    clean = clean.dropna(subset=features)
+    clean = data.copy().dropna(subset=features)
     if clean.empty:
-        raise ValueError("Po usunięciu braków danych nie ma wierszy do klastrowania.")
+        raise ValueError("Brak danych numerycznych po czyszczeniu.")
 
-    # skalowanie
     scaler = StandardScaler()
     X = scaler.fit_transform(clean[features].astype(float))
 
-    # liczba klastrów nie może przekraczać liczby próbek
     k = max(2, min(n_clusters, X.shape[0]))
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
     clusters = kmeans.fit_predict(X)
 
-    # zwróć także indeksy zachowanych wierszy, aby wstawić klastry z powrotem
     return clusters, features, scaler, kmeans, clean.index.to_list()
 
 # ---------- Sidebar ----------
 st.sidebar.header("⚙️ Ustawienia")
 k_choice = st.sidebar.slider("Liczba klastrów", min_value=2, max_value=10, value=5, step=1)
 
-# ---------- Klastrowanie ----------
-try:
-    clusters, features, scaler, kmeans, kept_idx = prepare_clustering(df, k_choice)
-    # zainicjalizuj kolumnę cluster NaN i wpisz tylko dla użytych wierszy
-    df = df.copy()
-    df["cluster"] = np.nan
-    df.loc[kept_idx, "cluster"] = clusters
-except ValueError as e:
-    st.error(f"Problem z danymi: {e}")
-    st.stop()
+# Filtry dodatkowe
+if "industry" in df.columns:
+    industry_filter = st.sidebar.multiselect("Filtruj po branży:", options=df["industry"].dropna().unique())
+    if industry_filter:
+        df = df[df["industry"].isin(industry_filter)]
 
-# filtr: pokazuj tylko wiersze z przypisanym klastrem
+if "fav_place" in df.columns:
+    place_filter = st.sidebar.multiselect("Filtruj po ulubionym miejscu:", options=df["fav_place"].dropna().unique())
+    if place_filter:
+        df = df[df["fav_place"].isin(place_filter)]
+
+# ---------- Klastrowanie ----------
+clusters, features, scaler, kmeans, kept_idx = prepare_clustering(df, k_choice)
+df = df.copy()
+df["cluster"] = np.nan
+df.loc[kept_idx, "cluster"] = clusters
+
 df_clust = df.dropna(subset=["cluster"]).copy()
 df_clust["cluster"] = df_clust["cluster"].astype(int)
 
 # ---------- Wybór użytkownika ----------
 st.sidebar.header("🔍 Znajdź swoją grupę")
-# indeksy po klastrowaniu:
 user_options = [
     f"User {int(idx)} - {df.loc[idx, 'age'] if 'age' in df.columns and pd.notna(df.loc[idx, 'age']) else 'Profile'}"
     for idx in df_clust.index
 ]
 if len(user_options) == 0:
-    st.error("Brak rekordów po przygotowaniu danych. Sprawdź braki (NaN) w kolumnach numerycznych.")
+    st.error("Brak rekordów po przygotowaniu danych.")
     st.stop()
 
 user_choice = st.sidebar.selectbox("Wybierz swój profil:", options=user_options)
@@ -110,20 +111,18 @@ st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
 col1, col2 = st.columns(2)
 
 with col1:
-    if "gender" in df.columns and cluster_data["gender"].notna().any():
-        gender_counts = cluster_data["gender"].value_counts()
-        if len(gender_counts) > 0:
+    if "gender_num" in cluster_data.columns:
+        g_counts = cluster_data["gender_num"].value_counts()
+        if not g_counts.empty:
+            labels = ["Mężczyzna (0.0)", "Kobieta (1.0)"]
+            values = [g_counts.get(0.0, 0), g_counts.get(1.0, 0)]
             fig, ax = plt.subplots()
-            ax.pie(gender_counts.values, labels=gender_counts.index, autopct="%1.1f%%")
-            ax.set_title(f"Rozkład płci — Grupa {int(cluster_desc)}")
+            ax.pie(values, labels=labels, autopct="%1.1f%%")
+            ax.set_title(f"Płeć numerycznie — Grupa {int(cluster_desc)}")
             st.pyplot(fig)
-        else:
-            st.info("Brak danych o płci w tej grupie.")
-    else:
-        st.info("Kolumna 'gender' nieobecna lub pusta.")
 
 with col2:
-    if "age" in df.columns and cluster_data["age"].notna().any():
+    if "age" in cluster_data.columns:
         age_counts = cluster_data["age"].value_counts().sort_index()
         if len(age_counts) > 0:
             fig, ax = plt.subplots()
@@ -131,10 +130,6 @@ with col2:
             ax.set_title(f"Rozkład wieku — Grupa {int(cluster_desc)}")
             ax.tick_params(axis="x", rotation=45)
             st.pyplot(fig)
-        else:
-            st.info("Brak danych o wieku w tej grupie.")
-    else:
-        st.info("Kolumna 'age' nieobecna lub pusta.")
 
 # ---------- Różnice cech ----------
 st.header("🎯 Co łączy Twoją grupę?")
@@ -149,10 +144,8 @@ if not cluster_mean.empty and not overall_mean.empty:
             your_value = cluster_mean[feature]
             avg_value = overall_mean[feature]
             st.write(f"- **{feature}**: {your_value:.2f} (średnia ogólna: {avg_value:.2f})")
-    else:
-        st.info("Brak wyróżniających się cech numerycznych.")
-else:
-    st.info("Brak danych numerycznych do porównania.")
 
 st.markdown("---")
-st.caption("Aplikacja do znajdowania znajomych na kursie data science | Moduł 7  | bonus: jeśli coś wybuchnie, to znaczy, że żyje XD")
+st.caption("Znajdowanie znajomych | teraz z płcią numeryczną i filtrami branży i ulubionego miejsca 🚀")
+
+
