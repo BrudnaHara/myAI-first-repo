@@ -9,7 +9,7 @@ from pathlib import Path
 from collections import Counter
 
 st.set_page_config(page_title="Znajdź nerdów jak Ty", layout="wide")
-st.title("Znajdź nerdów jak Ty")
+st.title("Grepuj nerdów")
 
 # ---------- Dane ----------
 @st.cache_data
@@ -135,7 +135,6 @@ df_view.loc[res["kept_idx"], "cluster"] = res["clusters"]
 df_clust = df_view.dropna(subset=["cluster"]).copy()
 df_clust["cluster"] = df_clust["cluster"].astype(int)
 if df_clust.empty:
-    st.header("👋 Nerdy jak Ty XD")
     st.write("you weirdo as fuck XD")
     st.stop()
 
