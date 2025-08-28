@@ -1,36 +1,30 @@
 
 import streamlit as st
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+# twardy reset stylu
+mpl.rcParams.update(mpl.rcParamsDefault)
+plt.style.use("default")
+
+# białe tła i czarne fonty
+mpl.rcParams.update({
+    "figure.facecolor": "white",
+    "axes.facecolor": "white",
+    "savefig.facecolor": "white",
+    "axes.edgecolor": "black",
+    "text.color": "black",
+    "axes.labelcolor": "black",
+    "xtick.color": "black",
+    "ytick.color": "black",
+})
+
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from pathlib import Path
 from collections import Counter
-
-st.markdown("""
-<style>
-    /* PODSTAWOWY STYL TERMINALA */
-    .stApp {
-        background-color: black;
-        color: #00ff00;
-        font-family: 'Monospace', 'Courier New';
-    }
-    
-    /* NAGŁÓWKI */
-    h1, h2, h3 {
-        color: #00ff00 !important;
-    }
-    
-    /* INPUTY */
-    .stTextInput input {
-        background-color: black;
-        color: #00ff00;
-        border: 1px solid #00ff00;
-        font-family: 'Monospace';
-    }
-</style>
-""", unsafe_allow_html=True)
 
 st.set_page_config(
     page_title="grepuj nerdów", 
