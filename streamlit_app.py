@@ -206,6 +206,36 @@ cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_avai
 cluster_data = df_clust[df_clust["cluster"] == cluster_desc]
 st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
 
+import textwrap
+
+def _wrap(labels, width=14):
+    return ["\n".join(textwrap.wrap(str(x), width=width)) for x in labels]
+
+def plot_bar(series, title):
+    s = series.dropna().astype(str).value_counts().head(12)  # top 12
+    fig, ax = plt.subplots(figsize=(10, 4), constrained_layout=True, facecolor="white")
+    ax.set_facecolor("white")
+    ax.barh(_wrap(s.index), s.values)
+    ax.invert_yaxis()  # najwięcej na górze
+    ax.set_title(title)
+    ax.grid(axis="x", alpha=0.2)
+    st.pyplot(fig, clear_figure=True)
+
+def plot_pie(series, title):
+    s = series.dropna().astype(str).value_counts()
+    fig, ax = plt.subplots(figsize=(5, 5), constrained_layout=True, facecolor="white")
+    ax.set_facecolor("white")
+    if len(s) <= 6:
+        ax.pie(s.values, labels=_wrap(s.index, 12), autopct="%1.1f%%", startangle=90,
+               wedgeprops={"edgecolor": "white"})
+    else:
+        wedges, _ = ax.pie(s.values, startangle=90, wedgeprops={"edgecolor": "white"})
+        ax.legend(wedges, _wrap(s.index, 20), loc="center left", bbox_to_anchor=(1, 0.5))
+    ax.set_title(title)
+    ax.axis("equal")
+    st.pyplot(fig, clear_figure=True)
+
+
 # KOL_2: podsumowanie pól binarnych 0/1
 st.subheader("🔧 Preferencje i motywacje (udział 1 = TAK)")
 
