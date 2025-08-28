@@ -197,8 +197,8 @@ else:
     st.write(f"Znaleziono {len(same_cluster)} osób podobnych do Ciebie!")
     st.dataframe(same_cluster)
 
-# ---------- Charakterystyka grup ----------
-st.header("demony grupowania")
+# ---------- Charakterystyka grup: spójny layout ----------
+st.header("📊 Charakterystyka grup")
 clusters_available = sorted(df_clust["cluster"].unique().tolist())
 default_idx = clusters_available.index(selected_cluster) if selected_cluster in clusters_available else 0
 cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_available, index=default_idx)
@@ -206,12 +206,50 @@ cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_avai
 cluster_data = df_clust[df_clust["cluster"] == cluster_desc]
 st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
 
-# KOL_1: kategorie tekstowe (więcej pól)
-cat_cols_cfg = ["industry", "fav_place", "edu_level", "gender", "fav_animals", "city"]
-present_cat = [c for c in cat_cols_cfg if c in cluster_data.columns and cluster_data[c].notna().any()]
+# helpery
+def plot_bar(series, title):
+    fig, ax = plt.subplots(figsize=(10, 3), facecolor="white")
+    ax.set_facecolor("white")
+    s = series.dropna().astype(str).value_counts().head(10)
+    ax.bar(s.index, s.values)
+    ax.set_title(title)
+    ax.tick_params(axis="x", rotation=30)
+    st.pyplot(fig, clear_figure=True)
 
-if not present_cat:
-    st.info("Brak danych kategorycznych do pokazania.")
+def plot_pie(series, title):
+    fig, ax = plt.subplots(figsize=(5, 5), facecolor="white")
+    ax.set_facecolor("white")
+    s = series.dropna().astype(str).value_counts()
+    ax.pie(s.values, labels=s.index, autopct="%1.1f%%", startangle=90,
+           wedgeprops={"edgecolor": "white"})
+    ax.set_title(title)
+    ax.axis("equal")
+    st.pyplot(fig, clear_figure=True)
+
+# 1) górny szeroki słupek (industry, jeśli jest; inaczej pierwszy dostępny kategoryczny)
+bar_col = "industry" if "industry" in cluster_data.columns else None
+if not bar_col:
+    for c in ["fav_place", "edu_level", "gender", "fav_animals", "city"]:
+        if c in cluster_data.columns:
+            bar_col = c; break
+if bar_col:
+    plot_bar(cluster_data[bar_col], f"{bar_col} — Grupa {int(cluster_desc)}")
+
+# 2) cztery koła poniżej (wybierz do 4 dostępnych kolumn)
+pie_candidates = [c for c in ["fav_place", "gender", "edu_level", "fav_animals"] if c in cluster_data.columns and c != bar_col]
+pie_cols = pie_candidates[:4]
+
+rows = [st.columns(2), st.columns(2)]  # 2x2
+i = 0
+for c in pie_cols:
+    r = 0 if i < 2 else 1
+    with rows[r][i % 2]:
+        plot_pie(cluster_data[c], f"{c} — Grupa {int(cluster_desc)}")
+    i += 1
+
+if not bar_col and not pie_cols:
+    st.info("Brak danych kategorycznych do wizualizacji.")
+
 else:
     cols = st.columns(2)
     for i, c in enumerate(present_cat):
