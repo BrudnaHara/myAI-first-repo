@@ -21,8 +21,7 @@ st.markdown("""
 
 st.set_page_config(
     page_title="grepuj nerdów", 
-    layout="wide",
-    page_icon="🖥️"
+    layout="wide"
 )
 st.markdown("""
 <style>
