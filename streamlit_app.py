@@ -8,8 +8,7 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 
-st.set_page_config(page_title="Znajdź nerdów jak Ty", layout="wide")
-st.title("Grepuj nerdów")
+st.set_page_config(page_title="grepuj nerdów", layout="wide")
 
 # ---------- Dane ----------
 @st.cache_data
@@ -209,19 +208,28 @@ else:
             st.pyplot(fig)
 
 # KOL_2: podsumowanie pól binarnych 0/1
-st.subheader("🔧 Preferencje i motywacje (udział TAK)")
-bin_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
+st.subheader("🔧 Preferencje i motywacje (udział 1 = TAK)")
+
+raw_cols = [
+    "hobby_movies","hobby_sport","hobby_art","hobby_other","hobby_video_games",
+    "learning_pref_books","learning_pref_offline_courses","learning_pref_personal_projects",
+    "learning_pref_teaching","learning_pref_teamwork","learning_pref_workshop","learning_pref_chatgpt",
+    "motivation_challenges","motivation_career","motivation_creativity_and_innovation",
+    "motivation_money_and_job","motivation_personal_growth","motivation_remote",
+]
+bin_cols = list(dict.fromkeys(raw_cols))
 bin_present = [c for c in bin_cols if c in cluster_data.columns]
 
 if bin_present:
-    summary = []
+    rows = []
     for c in bin_present:
         s = pd.to_numeric(cluster_data[c], errors="coerce")
-        p = float((s == 1).mean()*100) if s.notna().any() else 0.0
-        summary.append((c, f"{p:.0f}%"))
-    st.table(pd.DataFrame(summary, columns=["cecha", "TAK"]))
+        p = float((s == 1).mean() * 100) if s.notna().any() else 0.0
+        rows.append((c, f"{p:.0f}%"))
+    st.table(pd.DataFrame(rows, columns=["feature", "share_of_1"]))
 else:
     st.info("Brak pól binarnych do podsumowania.")
+
 
 # ---------- Śmieszne podsumowanie ----------
 def funny_summary(df_subset: pd.DataFrame) -> str:
