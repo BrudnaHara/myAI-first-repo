@@ -8,6 +8,17 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 
+# Styly konsoli (na górze pliku)
+st.markdown("""
+<style>
+    .stTextInput input {
+        font-family: Monospace;
+        background-color: black;
+        color: #00ff00;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.set_page_config(page_title="grepuj nerdów", layout="wide")
 
 # ---------- Dane ----------
@@ -168,7 +179,7 @@ st.sidebar.metric("Liczba osób w grupie", len(same_cluster))
 
 
 # ---------- Sekcja główna ----------
-st.header("Nerdy jak Ty XD")
+st.header("nerdy jak ty XD")
 if same_cluster.empty:
     st.write("you weirdo as fuck XD")
 else:
@@ -176,7 +187,7 @@ else:
     st.dataframe(same_cluster)
 
 # ---------- Charakterystyka grup ----------
-st.header("📊 Charakterystyka grup")
+st.header("demony grupowania")
 clusters_available = sorted(df_clust["cluster"].unique().tolist())
 default_idx = clusters_available.index(selected_cluster) if selected_cluster in clusters_available else 0
 cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_available, index=default_idx)
@@ -256,3 +267,83 @@ st.write(funny_summary(target_df))
 
 st.markdown("---")
 st.caption("Kto to czyta ten mieszka w piwnicy XD")
+st.markdown("---")
+if st.button("man demony-grupowania"):
+    with st.expander("📖 MANUAL: demony-grupowania", expanded=True):
+        st.markdown("""
+        ### NAZWA
+        **demony-grupowania** – demon grupowania użytkowników na podstawie podobieństwa cech
+
+        ### SKŁADNIA
+        `demony-grupowania [--algorithm=kmeans] [--cluster=5] [--verbose]`
+
+        ### OPIS
+        Demon działający w tle, który grupuje użytkowników na klastry używając niekontrolowanego uczenia maszynowego.  
+        Działa jak usługa systemowa – nie wymaga interakcji użytkownika.
+
+        ### OPCJE
+        - `--algorithm`   wybór algorytmu (domyślnie: kmeans)  
+        - `--cluster`     liczba klastrów (domyślnie: 5)  
+        - `--verbose`     szczegółowe logi do `/var/log/nerdapp/grupowanie.log`
+
+        ### PRZYKŁADY
+        `demony-grupowania --cluster=5 --verbose`  
+        Grupuje użytkowników na 5 klastrów z pokazywaniem logów.
+
+        ### AUTOR
+        NerdApp 1.0 – napisane przez BrudnaHara na Debianie
+        """)
+        st.markdown("""
+<style>
+    .stExpander {
+        background-color: black;
+        color: #00ff00;
+        font-family: Monospace;
+    }
+</style>
+""", unsafe_allow_html=True)
+        
+# Easter egg: Help w stylu konsoli (NA SAMYM KONCU)
+st.markdown("---")
+with st.expander("🖥️ **Konsola pomocy (wpisz komendę)**"):
+    help_input = st.text_input("$", value="", key="help_input", placeholder="wpisz 'help' lub 'man'")
+    
+    if help_input.strip() == "help":
+        st.code("""
+Dostępne komendy:
+- help          -> pokazuje tę wiadomość
+- man           -> manual demona grupowania
+- grepuj_nerdów -> uruchamia główną funkcję
+- exit          -> zamyka pomoc (faktycznie nie zamyka, lol)
+        """)
+    
+    elif help_input.strip() == "man":
+        st.code("""
+NAZWA:
+    demony-grupowania – demon grupowania użytkowników na podstawie podobieństwa cech
+
+SKŁADNIA:
+    demony-grupowania [--algorithm=kmeans] [--cluster=5] [--verbose]
+
+OPIS:
+    Demon działający w tle, który grupuje użytkowników na klastry używając 
+    niekontrolowanego uczenia maszynowego. Działa jak usługa systemowa.
+
+OPCJE:
+    --algorithm   wybór algorytmu (domyślnie: kmeans)  
+    --cluster     liczba klastrów (domyślnie: 5)  
+    --verbose     szczegółowe logi do /var/log/nerdapp/grupowanie.log
+
+AUTOR:
+    NerdApp 1.0 – napisane przez BrudnaHara na Debianie
+        """)
+    
+    elif help_input.strip() == "grepuj_nerdów":
+        st.success("Uruchamiam grepowanie nerdów...")
+        st.write("🔍 Przełącz się na zakładkę 'grepuj nerdów' powyżej!")
+    
+    elif help_input.strip() == "exit":
+        st.warning("Nie ma wyjścia z pomocą – to jest Streamlit, nie prawdziwy terminal! 😉")
+    
+    elif help_input.strip() != "":
+        st.error(f"Komenda nieznana: '{help_input}'. Wpisz 'help' aby uzyskać pomoc.")
