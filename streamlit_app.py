@@ -57,15 +57,26 @@ with st.sidebar.expander("Preferencje i motywacje"):
         "motivation_challenges","motivation_career","motivation_creativity_and_innovation",
         "motivation_money_and_job","motivation_personal_growth","motivation_remote",
     ]
-    binary_cols = [c for i,c in enumerate(raw_cols) if c not in raw_cols[:i]]  # deduplikacja
+    # deduplikacja z zachowaniem kolejności
+    binary_cols = list(dict.fromkeys(raw_cols))
 
-    for col in binary_cols:
+    # ładne etykiety (opcjonalnie)
+    pretty = lambda c: c.replace("_", " ").title()
+
+    for i, col in enumerate(binary_cols):
         if col in df_f.columns:
             s = pd.to_numeric(df_f[col], errors="coerce")
-            choice = st.sidebar.radio(col, ["Wszystko","tak","nie"], index=0, horizontal=True, key=f"bin_{col}")
+            choice = st.sidebar.radio(
+                pretty(col),
+                ["Wszystko","tak","nie"],
+                index=0,
+                horizontal=True,
+                key=f"radio_bin_{col}_{i}"   # <<< unikalny klucz
+            )
             if choice != "Wszystko":
                 want = 1 if choice == "tak" else 0
                 df_f = df_f[s == want]
+
 
 
 # brak wyników po filtrach
