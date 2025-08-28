@@ -10,72 +10,24 @@ from collections import Counter
 
 st.markdown("""
 <style>
-    /* GŁÓWNE TŁO */
-    .main, .stApp {
-        background-color: #000000 !important;
+    /* PODSTAWOWY STYL TERMINALA */
+    .stApp {
+        background-color: black;
+        color: #00ff00;
+        font-family: 'Monospace', 'Courier New';
+    }
+    
+    /* NAGŁÓWKI */
+    h1, h2, h3 {
         color: #00ff00 !important;
     }
     
-    /* WSZYSTKIE TEKSTY */
-    .stApp, p, div, span, pre, h1, h2, h3, h4, h5, h6 {
-        color: #00ff00 !important;
-        font-family: 'Monospace', 'Courier New', Courier, monospace !important;
-    }
-    
-    /* SIDEBAR - TŁO */
-    section[data-testid="stSidebar"] {
-        background-color: #111111 !important;
-        color: #00ff00 !important;
-    }
-    
-    /* TEKST W SIDEBAR */
-    .stSidebar p, .stSidebar div, .stSidebar span, .stSidebar h1, .stSidebar h2, .stSidebar h3 {
-        color: #00ff00 !important;
-        font-family: 'Monospace', 'Courier New', Courier, monospace !important;
-    }
-    
-    /* INPUTY W SIDEBAR */
-    .stSidebar .stTextInput input {
-        background-color: #000000 !important;
-        color: #00ff00 !important;
-        font-family: 'Monospace' !important;
-        border: 1px solid #00ff00 !important;
-    }
-    
-    /* PRZYCISKI W SIDEBAR */
-    .stSidebar .stButton button {
-        background-color: #000000 !important;
-        color: #00ff00 !important;
-        font-family: 'Monospace' !important;
-        border: 1px solid #00ff00 !important;
-        border-radius: 0 !important;
-    }
-    
-    /* SELEKTY W SIDEBAR */
-    .stSidebar .stSelectbox select {
-        background-color: #000000 !important;
-        color: #00ff00 !important;
-        font-family: 'Monospace' !important;
-        border: 1px solid #00ff00 !important;
-    }
-    
-    /* UKRYJ HEADER I FOOTER */
-    .stApp header, .stApp footer {
-        display: none;
-    }
-    
-    /* NAPRAW EXPANDERY */
-    .stExpander {
-        border: 1px solid #00ff00 !important;
-        background-color: #000000 !important;
-    }
-    
-    /* NAPRAW KONSOLĘ POMOCY */
+    /* INPUTY */
     .stTextInput input {
-        background-color: #000000 !important;
-        color: #00ff00 !important;
-        font-family: 'Monospace' !important;
-        border: 1px solid #00ff00 !important;
+        background-color: black;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        font-family: 'Monospace';
     }
 </style>
 """, unsafe_allow_html=True)
