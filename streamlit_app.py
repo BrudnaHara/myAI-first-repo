@@ -11,83 +11,77 @@ from collections import Counter
 # Styly konsoli (na górze pliku)
 st.markdown("""
 <style>
-    .stTextInput input {
-        font-family: Monospace;
-        background-color: black;
-        color: #00ff00;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-st.set_page_config(
-    page_title="grepuj nerdów", 
-    layout="wide"
-)
-st.markdown("""
-<style>
-    /* GLOBALNE STYLE TERMINALA */
+    /* GŁÓWNE TŁO */
     .main {
         background-color: #000000;
         color: #00ff00;
     }
-    .stApp {
-        background-color: #000000;
-        color: #00ff00;
-        font-family: 'Monospace', 'Courier New', Courier, monospace;
-    }
-    /* Nagłówki */
-    h1, h2, h3, h4, h5, h6 {
+    
+    /* WSZYSTKIE TEKSTY */
+    .stApp, p, div, span, pre, h1, h2, h3, h4, h5, h6 {
         color: #00ff00 !important;
-        font-family: 'Monospace' !important;
+        font-family: 'Monospace', 'Courier New', Courier, monospace !important;
     }
-    /* Tekst */
-    p, div, span, pre {
-        color: #00ff00 !important;
-        font-family: 'Monospace' !important;
-    }
-    /* Inputy */
+    
+    /* INPUTY */
     .stTextInput input {
         background-color: #000000 !important;
         color: #00ff00 !important;
         font-family: 'Monospace' !important;
         border: 1px solid #00ff00 !important;
     }
-    /* Selecty */
+    
+    /* PRZYCISKI - SPECJALNY STYL */
+    .stButton > button {
+        background-color: #000000 !important;
+        color: #00ff00 !important;
+        font-family: 'Monospace' !important;
+        border: 1px solid #00ff00 !important;
+        border-radius: 0 !important;
+        padding: 0.5rem 1rem;
+    }
+    
+    .stButton > button:hover {
+        background-color: #003300 !important;
+        color: #00ff00 !important;
+    }
+    
+    /* SELEKTY */
     .stSelectbox select {
         background-color: #000000 !important;
         color: #00ff00 !important;
         font-family: 'Monospace' !important;
         border: 1px solid #00ff00 !important;
     }
-    /* Przyciski */
-    .stButton button {
+    
+    /* DATAFRAME - LEPIEJ ZOSTAW DOMYŚLNY */
+    /* .dataframe {
         background-color: #000000 !important;
         color: #00ff00 !important;
-        font-family: 'Monospace' !important;
-        border: 1px solid #00ff00 !important;
-    }
-    .stButton button:hover {
-        background-color: #003300 !important;
-        color: #00ff00 !important;
-    }
-    /* Dataframe */
-    .dataframe {
-        background-color: #000000 !important;
-        color: #00ff00 !important;
-    }
-    /* Expandery */
+    } */
+    
+    /* EKSPANDERY */
     .stExpander {
         border: 1px solid #00ff00 !important;
     }
-    /* Success/Error */
-    .stSuccess {
-        color: #00ff00 !important;
+    
+    /* UKRYJ ELEMENTY STREAMLIT */
+    .stApp header {
+        display: none;
     }
-    .stError {
-        color: #ff0000 !important;
+    
+    /* UKRYJ 'MADE WITH STREAMLIT' */
+    .stApp footer {
+        display: none;
     }
 </style>
 """, unsafe_allow_html=True)
+
+st.set_page_config(
+    page_title="grepuj nerdów", 
+    layout="wide",
+    page_icon="🖥️"
+)
 
 # ---------- Dane ----------
 @st.cache_data
