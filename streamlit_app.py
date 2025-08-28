@@ -49,16 +49,24 @@ df_f = multiselect_filter(df_f, "gender", "Płeć")  # tekstowe, nie numeryczne
 df_f = multiselect_filter(df_f, "fav_animals", "Ulubione zwierzę")
 df_f = multiselect_filter(df_f, "city", "Miasto")  # jeśli masz
 
-# binarne 0/1 → tak/nie
 with st.sidebar.expander("Preferencje i motywacje"):
-    binary_cols = ["hobby_movies", "hobby_sport", "hobby_movies", "hobby_art", "hobby_other", "hobby_video_games", "learning_pref_books", "learning_pref_offline_couses", "learning_pref_personal_projects", "learning_pref_teaching","learning_pref_teamwork", "learning_pref_workshop", "learning_pref_chatgpt", "motivation_challenges", "motivation_career", "motivation_creativity_and_innovation", "motivation_money_and_job", "motivation_personal_growth", "motivation_remote"]
+    raw_cols = [
+        "hobby_movies","hobby_sport","hobby_art","hobby_other","hobby_video_games",
+        "learning_pref_books","learning_pref_offline_courses","learning_pref_personal_projects",
+        "learning_pref_teaching","learning_pref_teamwork","learning_pref_workshop","learning_pref_chatgpt",
+        "motivation_challenges","motivation_career","motivation_creativity_and_innovation",
+        "motivation_money_and_job","motivation_personal_growth","motivation_remote",
+    ]
+    binary_cols = [c for i,c in enumerate(raw_cols) if c not in raw_cols[:i]]  # deduplikacja
+
     for col in binary_cols:
         if col in df_f.columns:
-            s = pd.to_numeric(df_f[col], errors="coerce")  # akceptuje 0/1 i "0"/"1"
-            choice = st.sidebar.radio(col, ["Wszystko", "tak", "nie"], index=0, horizontal=True)
+            s = pd.to_numeric(df_f[col], errors="coerce")
+            choice = st.sidebar.radio(col, ["Wszystko","tak","nie"], index=0, horizontal=True, key=f"bin_{col}")
             if choice != "Wszystko":
                 want = 1 if choice == "tak" else 0
                 df_f = df_f[s == want]
+
 
 # brak wyników po filtrach
 if df_f.empty:
