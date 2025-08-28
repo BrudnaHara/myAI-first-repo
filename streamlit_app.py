@@ -8,8 +8,8 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 
-st.set_page_config(page_title="👥 Znajdź nerdów jak ty", layout="wide")
-st.title("👥 Znajdź nerdów jak ty")
+st.set_page_config(page_title="Znajdź nerdów jak Ty", layout="wide")
+st.title("Znajdź nerdów jak Ty")
 
 # ---------- Dane ----------
 @st.cache_data
@@ -125,7 +125,6 @@ df_num = df_num.loc[:, df_num.nunique() > 1]
 
 res = prepare_clustering(df_num, k_choice)
 if res is None:
-    st.header("👋 Nerdy jak Ty XD")
     st.write("you weirdo as fuck XD")
     st.stop()
 
@@ -144,7 +143,6 @@ if df_clust.empty:
 # ---------- Auto-wybór grupy ----------
 mode_series = df_clust["cluster"].mode()
 if mode_series.empty:
-    st.header("👋 Nerdy jak Ty XD")
     st.write("you weirdo as fuck XD")
     st.stop()
 
@@ -157,7 +155,7 @@ st.sidebar.metric("Liczba osób w grupie", len(same_cluster))
 
 
 # ---------- Sekcja główna ----------
-st.header("👋 Nerdy jak Ty XD")
+st.header("Nerdy jak Ty XD")
 if same_cluster.empty:
     st.write("you weirdo as fuck XD")
 else:
@@ -230,7 +228,7 @@ def funny_summary(df_subset: pd.DataFrame) -> str:
     ]
     return f"➡️ Podsumowanie: {core}. {np.random.choice(punch)}"
 
-st.subheader("😼 TL;DR Twojej grupy")
+st.subheader("TL;DR Twojej grupy")
 target_df = same_cluster if not same_cluster.empty else df_clust
 st.write(funny_summary(target_df))
 
