@@ -49,7 +49,7 @@ df_f = multiselect_filter(df_f, "gender", "Płeć")  # tekstowe, nie numeryczne
 df_f = multiselect_filter(df_f, "fav_animals", "Ulubione zwierzę")
 df_f = multiselect_filter(df_f, "city", "Miasto")  # jeśli masz
 
-with st.sidebar.expander("Preferencje i motywacje"):
+with st.sidebar.expander("Parametry jądra"):
     raw_cols = [
         "hobby_movies","hobby_sport","hobby_art","hobby_other","hobby_video_games",
         "learning_pref_books","learning_pref_offline_courses","learning_pref_personal_projects",
@@ -59,9 +59,6 @@ with st.sidebar.expander("Preferencje i motywacje"):
     ]
     # deduplikacja z zachowaniem kolejności
     binary_cols = list(dict.fromkeys(raw_cols))
-
-    # ładne etykiety (opcjonalnie)
-    pretty = lambda c: c.replace("_", " ").title()
 
     for i, col in enumerate(binary_cols):
         if col in df_f.columns:
