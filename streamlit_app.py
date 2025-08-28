@@ -51,7 +51,7 @@ df_f = multiselect_filter(df_f, "city", "Miasto")  # jeśli masz
 
 # binarne 0/1 → tak/nie
 with st.sidebar.expander("Preferencje i motywacje"):
-    binary_cols = ["hobby_movies", "hobby_sport", "learning_pref_chatgpt", "motivation_challenges"]
+    binary_cols = ["hobby_movies", "hobby_sport", "hobby_movies", "hobby_art", "hobby_other", "hobby_video_games", "learning_pref_books", "learning_pref_offline_couses", "learning_pref_personal_projects", "learning_pref_teaching","learning_pref_teamwork", "learning_pref_workshop", "learning_pref_chatgpt", "motivation_challenges", "motivation_career", "motivation_creativity_and_innovation", "motivation_money_and_job", "motivation_personal_growth", "motivation_remote"]
     for col in binary_cols:
         if col in df_f.columns:
             s = pd.to_numeric(df_f[col], errors="coerce")  # akceptuje 0/1 i "0"/"1"
