@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import matplotlib as mpl
@@ -24,7 +23,6 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from pathlib import Path
-from collections import Counter
 
 st.set_page_config(
     page_title="grepuj nerdów", 
@@ -49,6 +47,27 @@ if df.empty:
     else:
         st.stop()
 
+# ---------- Normalizacja płci ----------
+def _map_gender(x):
+    if pd.isna(x):
+        return x
+    if isinstance(x, (int, float, np.integer, np.floating)):
+        try:
+            xi = int(x)
+            return {0: "Kobieta", 1: "Mężczyzna", 2: "Inna/Brak"}.get(xi, x)
+        except Exception:
+            pass
+    s = str(x).strip().lower()
+    mapa = {
+        "0": "Kobieta", "1": "Mężczyzna", "2": "Inna/Brak",
+        "k": "Kobieta", "kobieta": "Kobieta", "f": "Kobieta", "female": "Kobieta",
+        "m": "Mężczyzna", "mezczyzna": "Mężczyzna", "mężczyzna": "Mężczyzna", "male": "Mężczyzna",
+    }
+    return mapa.get(s, x)
+
+if "gender" in df.columns:
+    df["gender"] = df["gender"].apply(_map_gender)
+
 # ---------- Sidebar: filtry ----------
 st.sidebar.header("⚙️ Ustawienia")
 k_choice = st.sidebar.slider("Liczba klastrów", 1, 10, 5, 1)
@@ -66,9 +85,9 @@ df_f = df.copy()
 df_f = multiselect_filter(df_f, "industry", "Branża")
 df_f = multiselect_filter(df_f, "fav_place", "Ulubione miejsce")
 df_f = multiselect_filter(df_f, "edu_level", "Wykształcenie")
-df_f = multiselect_filter(df_f, "gender", "Płeć")  # tekstowe, nie numeryczne
+df_f = multiselect_filter(df_f, "gender", "Płeć")
 df_f = multiselect_filter(df_f, "fav_animals", "Ulubione zwierzę")
-df_f = multiselect_filter(df_f, "city", "Miasto")  # jeśli masz
+df_f = multiselect_filter(df_f, "city", "Miasto")
 
 with st.sidebar.expander("Parametry jądra"):
     raw_cols = [
@@ -78,13 +97,13 @@ with st.sidebar.expander("Parametry jądra"):
         "motivation_challenges","motivation_career","motivation_creativity_and_innovation",
         "motivation_money_and_job","motivation_personal_growth","motivation_remote",
     ]
-    binary_cols = list(dict.fromkeys(raw_cols))  # dedup
+    binary_cols = list(dict.fromkeys(raw_cols))
 
     for i, col in enumerate(binary_cols):
         if col in df_f.columns:
             s = pd.to_numeric(df_f[col], errors="coerce")
             choice = st.sidebar.radio(
-                col,  # surowa etykieta
+                col,
                 ["Wszystko","tak","nie"],
                 index=0,
                 horizontal=True,
@@ -94,32 +113,24 @@ with st.sidebar.expander("Parametry jądra"):
                 want = 1 if choice == "tak" else 0
                 df_f = df_f[s == want]
 
-
-
-# brak wyników po filtrach
 if df_f.empty:
     st.write("you weirdo as fuck XD")
     st.stop()
 
-
-# ---------- Klastrowanie (wariant minimalny) ----------
+# ---------- Klastrowanie ----------
 @st.cache_resource
 def prepare_clustering(data: pd.DataFrame, n_clusters: int = 5):
-    # tylko cechy numeryczne (bez 'id' jeśli istnieje)
     numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
     features = [c for c in numeric_cols if c != "id"]
     if not features:
         return None
-    # usuń wiersze z brakami w używanych cechach
     clean = data.dropna(subset=features).copy()
     if clean.empty:
         return None
 
-    # standaryzacja
     scaler = StandardScaler()
     X = scaler.fit_transform(clean[features].astype(float))
 
-    # k nie może przekraczać liczby próbek
     k = max(1, min(n_clusters, X.shape[0]))
     if k == 1:
         clusters = np.zeros(X.shape[0], dtype=int)
@@ -128,10 +139,8 @@ def prepare_clustering(data: pd.DataFrame, n_clusters: int = 5):
         clusters = kmeans.fit_predict(X)
 
     return {"clusters": clusters, "features": features, "kept_idx": clean.index.to_list(), "k": k}
-# ---------- Preprocessing: age → liczba, kategorie → one-hot ----------
-df_enc = df_f.copy()
 
-# age: mapuj przedziały na środki (dopasuj do swoich etykiet)
+df_enc = df_f.copy()
 if "age" in df_enc.columns:
     age_map = {
         "<18": 16, "18-24": 21, "18–24": 21,
@@ -140,21 +149,16 @@ if "age" in df_enc.columns:
     }
     df_enc["age_num"] = df_enc["age"].map(age_map)
 
-# kolumny kategoryczne do one-hot (użyj tylko tych, które masz)
 cat_cols_cfg = ["edu_level", "fav_place", "gender", "industry", "city", "fav_animals"]
 cat_cols = [c for c in cat_cols_cfg if c in df_enc.columns]
 
 dummies = pd.get_dummies(df_enc[cat_cols], dummy_na=False) if cat_cols else pd.DataFrame(index=df_enc.index)
 
-
-# numeryczne bazowe: wszystkie 0/1 (hobby_*, learning_*, motivation_*, + age_num)
 df_enc = df_enc.apply(lambda s: pd.to_numeric(s, errors="ignore"))
 num_base = df_enc.select_dtypes(include=[np.number])
-# dołącz age_num, jeśli jeszcze nie weszło
 if "age_num" in df_enc.columns and "age_num" not in num_base.columns:
     num_base = pd.concat([num_base, df_enc[["age_num"]]], axis=1)
 
-# finalny numeric dataframe do klastrowania
 df_num = pd.concat([num_base, dummies], axis=1)
 df_num = df_num.dropna(axis=1, how="all")
 df_num = df_num.loc[:, df_num.nunique() > 1]
@@ -164,7 +168,6 @@ if res is None:
     st.write("you weirdo as fuck XD")
     st.stop()
 
-# wstrzyknij etykiety do tabeli
 df_view = df_f.copy()
 df_view["cluster"] = np.nan
 df_view.loc[res["kept_idx"], "cluster"] = res["clusters"]
@@ -174,8 +177,6 @@ if df_clust.empty:
     st.write("you weirdo as fuck XD")
     st.stop()
 
-
-# ---------- Auto-wybór grupy ----------
 mode_series = df_clust["cluster"].mode()
 if mode_series.empty:
     st.write("you weirdo as fuck XD")
@@ -188,7 +189,6 @@ st.sidebar.header("📌 Wybrana grupa")
 st.sidebar.write(f"Automatycznie wybrano **grupę {selected_cluster}**.")
 st.sidebar.metric("Liczba osób w grupie", len(same_cluster))
 
-
 # ---------- Sekcja główna ----------
 st.header("nerdy jak ty XD")
 if same_cluster.empty:
@@ -197,8 +197,8 @@ else:
     st.write(f"Znaleziono {len(same_cluster)} osób podobnych do Ciebie!")
     st.dataframe(same_cluster)
 
-# ---------- Charakterystyka grup (jedna wybrana kolumna) ----------
-st.header("📊 Charakterystyka grup")
+# ---------- Charakterystyka grup ----------
+st.header("demony grupowania")
 clusters_available = sorted(df_clust["cluster"].unique().tolist())
 default_idx = clusters_available.index(selected_cluster) if selected_cluster in clusters_available else 0
 cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_available, index=default_idx)
@@ -206,37 +206,6 @@ cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_avai
 cluster_data = df_clust[df_clust["cluster"] == cluster_desc]
 st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
 
-import textwrap
-
-def _wrap(labels, width=14):
-    return ["\n".join(textwrap.wrap(str(x), width=width)) for x in labels]
-
-def plot_bar(series, title):
-    s = series.dropna().astype(str).value_counts().head(12)  # top 12
-    fig, ax = plt.subplots(figsize=(10, 4), constrained_layout=True, facecolor="white")
-    ax.set_facecolor("white")
-    ax.barh(_wrap(s.index), s.values)
-    ax.invert_yaxis()  # najwięcej na górze
-    ax.set_title(title)
-    ax.grid(axis="x", alpha=0.2)
-    st.pyplot(fig, clear_figure=True)
-
-def plot_pie(series, title):
-    s = series.dropna().astype(str).value_counts()
-    fig, ax = plt.subplots(figsize=(5, 5), constrained_layout=True, facecolor="white")
-    ax.set_facecolor("white")
-    if len(s) <= 6:
-        ax.pie(s.values, labels=_wrap(s.index, 12), autopct="%1.1f%%", startangle=90,
-               wedgeprops={"edgecolor": "white"})
-    else:
-        wedges, _ = ax.pie(s.values, startangle=90, wedgeprops={"edgecolor": "white"})
-        ax.legend(wedges, _wrap(s.index, 20), loc="center left", bbox_to_anchor=(1, 0.5))
-    ax.set_title(title)
-    ax.axis("equal")
-    st.pyplot(fig, clear_figure=True)
-
-
-# KOL_2: podsumowanie pól binarnych 0/1
 st.subheader("🔧 Preferencje i motywacje (udział 1 = TAK)")
 
 raw_cols = [
@@ -258,30 +227,6 @@ if bin_present:
     st.table(pd.DataFrame(rows, columns=["feature", "share_of_1"]))
 else:
     st.info("Brak pól binarnych do podsumowania.")
-
-
-# ---------- Śmieszne podsumowanie ----------
-def funny_summary(df_subset: pd.DataFrame) -> str:
-    bits = []
-    if "industry" in df_subset.columns and not df_subset["industry"].dropna().empty:
-        top_ind = df_subset["industry"].mode().iloc[0]
-        bits.append(f"klan {top_ind.lower()}")
-    if "fav_place" in df_subset.columns and not df_subset["fav_place"].dropna().empty:
-        top_pl = df_subset["fav_place"].mode().iloc[0]
-        bits.append(f"wyznawcy miejscówki „{top_pl}”")
-    if not bits:
-        bits = ["zjadacze tokenów na ChatGPT", "fascynaci kotów łażących po górach"]
-    core = ", ".join(bits[:3])
-    punch = [
-        "najbliżej Ci do ekipy zjadaczy tokenów 🧠",
-        "wygląda, że to plemię prompt wizardów 🔮",
-        "statystyka szepcze: to Twoje klimaty 😎",
-    ]
-    return f"➡️ Podsumowanie: {core}. {np.random.choice(punch)}"
-
-st.subheader("TL;DR Twojej grupy")
-target_df = same_cluster if not same_cluster.empty else df_clust
-st.write(funny_summary(target_df))
 
 st.markdown("---")
 st.caption("Kto to czyta ten mieszka w piwnicy XD")
@@ -320,8 +265,8 @@ if st.button("man demony-grupowania"):
     }
 </style>
 """, unsafe_allow_html=True)
-        
-# Easter egg: Help w stylu konsoli (NA SAMYM KONCU)
+
+# Easter egg
 st.markdown("---")
 with st.expander("🖥️ **Konsola pomocy (wpisz komendę)**"):
     help_input = st.text_input("$", value="", key="help_input", placeholder="wpisz 'help' lub 'man'")
