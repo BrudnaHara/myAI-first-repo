@@ -206,23 +206,6 @@ cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_avai
 cluster_data = df_clust[df_clust["cluster"] == cluster_desc]
 st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
 
-# dostępne kolumny kategoryczne
-cat_pool = [c for c in ["industry","fav_place","edu_level","gender","fav_animals","city"] if c in cluster_data.columns]
-if not cat_pool:
-    st.info("Brak danych kategorycznych do wizualizacji.")
-else:
-    col_chosen = st.selectbox("Kolumna do podglądu:", options=cat_pool)
-    s = cluster_data[col_chosen].dropna().astype(str).value_counts().head(15)
-    if s.empty:
-        st.info("Brak danych w wybranej kolumnie.")
-    else:
-        fig, ax = plt.subplots(figsize=(9,3), facecolor="white")
-        ax.set_facecolor("white")
-        ax.bar(s.index, s.values)
-        ax.set_title(f"{col_chosen} — Grupa {int(cluster_desc)}")
-        ax.tick_params(axis="x", rotation=30)
-        st.pyplot(fig, clear_figure=True)
-
 # KOL_2: podsumowanie pól binarnych 0/1
 st.subheader("🔧 Preferencje i motywacje (udział 1 = TAK)")
 
