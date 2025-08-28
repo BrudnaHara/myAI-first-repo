@@ -8,13 +8,12 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 
-# Styly konsoli (na górze pliku)
 st.markdown("""
 <style>
     /* GŁÓWNE TŁO */
-    .main {
-        background-color: #000000;
-        color: #00ff00;
+    .main, .stApp {
+        background-color: #000000 !important;
+        color: #00ff00 !important;
     }
     
     /* WSZYSTKIE TEKSTY */
@@ -23,56 +22,60 @@ st.markdown("""
         font-family: 'Monospace', 'Courier New', Courier, monospace !important;
     }
     
-    /* INPUTY */
-    .stTextInput input {
+    /* SIDEBAR - TŁO */
+    section[data-testid="stSidebar"] {
+        background-color: #111111 !important;
+        color: #00ff00 !important;
+    }
+    
+    /* TEKST W SIDEBAR */
+    .stSidebar p, .stSidebar div, .stSidebar span, .stSidebar h1, .stSidebar h2, .stSidebar h3 {
+        color: #00ff00 !important;
+        font-family: 'Monospace', 'Courier New', Courier, monospace !important;
+    }
+    
+    /* INPUTY W SIDEBAR */
+    .stSidebar .stTextInput input {
         background-color: #000000 !important;
         color: #00ff00 !important;
         font-family: 'Monospace' !important;
         border: 1px solid #00ff00 !important;
     }
     
-    /* PRZYCISKI - SPECJALNY STYL */
-    .stButton > button {
+    /* PRZYCISKI W SIDEBAR */
+    .stSidebar .stButton button {
         background-color: #000000 !important;
         color: #00ff00 !important;
         font-family: 'Monospace' !important;
         border: 1px solid #00ff00 !important;
         border-radius: 0 !important;
-        padding: 0.5rem 1rem;
     }
     
-    .stButton > button:hover {
-        background-color: #003300 !important;
-        color: #00ff00 !important;
-    }
-    
-    /* SELEKTY */
-    .stSelectbox select {
+    /* SELEKTY W SIDEBAR */
+    .stSidebar .stSelectbox select {
         background-color: #000000 !important;
         color: #00ff00 !important;
         font-family: 'Monospace' !important;
         border: 1px solid #00ff00 !important;
     }
     
-    /* DATAFRAME - LEPIEJ ZOSTAW DOMYŚLNY */
-    /* .dataframe {
-        background-color: #000000 !important;
-        color: #00ff00 !important;
-    } */
+    /* UKRYJ HEADER I FOOTER */
+    .stApp header, .stApp footer {
+        display: none;
+    }
     
-    /* EKSPANDERY */
+    /* NAPRAW EXPANDERY */
     .stExpander {
         border: 1px solid #00ff00 !important;
+        background-color: #000000 !important;
     }
     
-    /* UKRYJ ELEMENTY STREAMLIT */
-    .stApp header {
-        display: none;
-    }
-    
-    /* UKRYJ 'MADE WITH STREAMLIT' */
-    .stApp footer {
-        display: none;
+    /* NAPRAW KONSOLĘ POMOCY */
+    .stTextInput input {
+        background-color: #000000 !important;
+        color: #00ff00 !important;
+        font-family: 'Monospace' !important;
+        border: 1px solid #00ff00 !important;
     }
 </style>
 """, unsafe_allow_html=True)
