@@ -57,18 +57,17 @@ with st.sidebar.expander("Parametry jądra"):
         "motivation_challenges","motivation_career","motivation_creativity_and_innovation",
         "motivation_money_and_job","motivation_personal_growth","motivation_remote",
     ]
-    # deduplikacja z zachowaniem kolejności
-    binary_cols = list(dict.fromkeys(raw_cols))
+    binary_cols = list(dict.fromkeys(raw_cols))  # dedup
 
     for i, col in enumerate(binary_cols):
         if col in df_f.columns:
             s = pd.to_numeric(df_f[col], errors="coerce")
             choice = st.sidebar.radio(
-                pretty(col),
+                col,  # surowa etykieta
                 ["Wszystko","tak","nie"],
                 index=0,
                 horizontal=True,
-                key=f"radio_bin_{col}_{i}"   # <<< unikalny klucz
+                key=f"radio_bin_{col}_{i}"
             )
             if choice != "Wszystko":
                 want = 1 if choice == "tak" else 0
