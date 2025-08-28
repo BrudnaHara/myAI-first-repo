@@ -19,7 +19,76 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.set_page_config(page_title="grepuj nerdów", layout="wide")
+st.set_page_config(
+    page_title="grepuj nerdów", 
+    layout="wide",
+    page_icon="🖥️"
+)
+st.markdown("""
+<style>
+    /* GLOBALNE STYLE TERMINALA */
+    .main {
+        background-color: #000000;
+        color: #00ff00;
+    }
+    .stApp {
+        background-color: #000000;
+        color: #00ff00;
+        font-family: 'Monospace', 'Courier New', Courier, monospace;
+    }
+    /* Nagłówki */
+    h1, h2, h3, h4, h5, h6 {
+        color: #00ff00 !important;
+        font-family: 'Monospace' !important;
+    }
+    /* Tekst */
+    p, div, span, pre {
+        color: #00ff00 !important;
+        font-family: 'Monospace' !important;
+    }
+    /* Inputy */
+    .stTextInput input {
+        background-color: #000000 !important;
+        color: #00ff00 !important;
+        font-family: 'Monospace' !important;
+        border: 1px solid #00ff00 !important;
+    }
+    /* Selecty */
+    .stSelectbox select {
+        background-color: #000000 !important;
+        color: #00ff00 !important;
+        font-family: 'Monospace' !important;
+        border: 1px solid #00ff00 !important;
+    }
+    /* Przyciski */
+    .stButton button {
+        background-color: #000000 !important;
+        color: #00ff00 !important;
+        font-family: 'Monospace' !important;
+        border: 1px solid #00ff00 !important;
+    }
+    .stButton button:hover {
+        background-color: #003300 !important;
+        color: #00ff00 !important;
+    }
+    /* Dataframe */
+    .dataframe {
+        background-color: #000000 !important;
+        color: #00ff00 !important;
+    }
+    /* Expandery */
+    .stExpander {
+        border: 1px solid #00ff00 !important;
+    }
+    /* Success/Error */
+    .stSuccess {
+        color: #00ff00 !important;
+    }
+    .stError {
+        color: #ff0000 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ---------- Dane ----------
 @st.cache_data
