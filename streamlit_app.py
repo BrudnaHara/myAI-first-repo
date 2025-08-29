@@ -23,6 +23,14 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from pathlib import Path
+import os
+import requests
+import json
+
+DEEPSEEK_BASE = "https://api.deepseek.com/v1"
+DEEPSEEK_MODEL = "deepseek-chat"  # tryb czatowy
+DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY")
+
 
 st.set_page_config(
     page_title="grepuj nerdów", 
@@ -265,6 +273,91 @@ if st.button("man demony-grupowania"):
     }
 </style>
 """, unsafe_allow_html=True)
+
+# ===== HYBRYDA LLM (Analiza vs Śmieszek) =====
+st.header("🧠 Opis klastru — DeepSeek (hybryda)")
+
+if not DEEPSEEK_KEY:
+    st.info("Brak DEEPSEEK_API_KEY w środowisku.")
+else:
+    mode = st.radio("Tryb odpowiedzi", ["Analiza", "Śmieszek"], horizontal=True)
+
+    # 🔥 TUTAJ ZMIENIASZ PROMPT
+    if mode == "Analiza":
+        SYS_PROMPT = (
+            "Jesteś poważnym analitykiem danych. "
+            "Podaj szczegółowy, techniczny opis klastra. "
+            "Bez żartów. Po polsku. Max 10 zdań."
+        )
+        TEMPERATURE = 0.25   # 🔥 zmień tu temperaturę
+        MAX_TOKENS = 500     # 🔥 zmień tu max tokeny
+    else:
+        SYS_PROMPT = (
+            "Opisz grupę użytkowników w zabawny, ironiczny sposób. "
+            "Po polsku. Max 2 zdania. "
+            "Nie bądź poważny."
+        )
+        TEMPERATURE = 0.7    # 🔥 zmień tu temperaturę
+        MAX_TOKENS = 150     # 🔥 zmień tu max tokeny
+
+    preview_rows = []
+    for c in bin_present:
+        s = pd.to_numeric(cluster_data[c], errors="coerce")
+        p = float((s == 1).mean() * 100) if s.notna().any() else 0.0
+        preview_rows.append({"feature": c, "share_of_1_pct": round(p, 1)})
+    preview_rows.sort(key=lambda r: r["share_of_1_pct"], reverse=True)
+    payload_user = {
+        "cluster_id": int(cluster_desc),
+        "n_in_group": int(len(cluster_data)),
+        "top_binary_features": preview_rows[:12],
+    }
+
+    if st.button("Generuj opis klastru (stream)"):
+        body = {
+            "model": DEEPSEEK_MODEL,
+            "stream": True,
+            "temperature": TEMPERATURE,
+            "max_tokens": MAX_TOKENS,
+            "messages": [
+                {"role": "system", "content": SYS_PROMPT},
+                {"role": "user", "content": json.dumps(payload_user, ensure_ascii=False)},
+            ],
+        }
+
+        placeholder = st.empty()
+        buf = []
+
+        try:
+            with requests.post(
+                f"{DEEPSEEK_BASE}/chat/completions",
+                headers={"Authorization": f"Bearer {DEEPSEEK_KEY}", "Content-Type": "application/json"},
+                json=body,
+                stream=True,
+                timeout=90,
+            ) as r:
+                r.raise_for_status()
+                for line in r.iter_lines(decode_unicode=True):
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        chunk = line[len("data: "):].strip()
+                        if chunk == "[DONE]":
+                            break
+                        try:
+                            obj = json.loads(chunk)
+                            delta = obj["choices"][0]["delta"].get("content", "")
+                            if delta:
+                                buf.append(delta)
+                                placeholder.write("".join(buf) + "▌")
+                        except Exception:
+                            continue
+            # finalny tekst
+            placeholder.write("".join(buf))
+        except requests.HTTPError as e:
+            st.error(f"HTTP {e.response.status_code}: {e.response.text[:300]}")
+        except Exception as e:
+            st.error(f"Błąd: {e}")
+        
 
 # Easter egg
 st.markdown("---")
