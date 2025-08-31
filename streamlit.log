@@ -1,0 +1,11 @@
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.1.37:8501
+  External URL: http://83.31.69.220:8501
+
+/home/brudna_hara/data_science_course/streamlit_app.py:165: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  df_enc = df_enc.apply(lambda s: pd.to_numeric(s, errors="ignore"))
+/home/brudna_hara/data_science_course/streamlit_app.py:165: FutureWarning: errors='ignore' is deprecated and will raise in a future version. Use to_numeric without passing `errors` and catch exceptions explicitly instead
+  df_enc = df_enc.apply(lambda s: pd.to_numeric(s, errors="ignore"))

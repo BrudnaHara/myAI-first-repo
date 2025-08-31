@@ -7,16 +7,16 @@ import matplotlib.pyplot as plt
 mpl.rcParams.update(mpl.rcParamsDefault)
 plt.style.use("default")
 
-# białe tła i czarne fonty
+# Zmień TYLKO kolory dla matplotlib (Streamlit sam się dostosuje)
 mpl.rcParams.update({
-    "figure.facecolor": "white",
-    "axes.facecolor": "white",
-    "savefig.facecolor": "white",
-    "axes.edgecolor": "black",
-    "text.color": "black",
-    "axes.labelcolor": "black",
-    "xtick.color": "black",
-    "ytick.color": "black",
+    "figure.facecolor": "#0E1117",        # ciemne tło Streamlita
+    "axes.facecolor": "#0E1117",          # ciemne tło wykresu
+    "savefig.facecolor": "#0E1117",       # ciemne tło do zapisu
+    "axes.edgecolor": "white",            # białe obramowania
+    "text.color": "white",                # biały tekst
+    "axes.labelcolor": "white",           # białe etykiety osi
+    "xtick.color": "white",               # białe ticki na osi X
+    "ytick.color": "white",               # białe ticki na osi Y
 })
 
 from sklearn.cluster import KMeans
@@ -35,7 +35,7 @@ DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY")
 st.set_page_config(
     page_title="grepuj nerdów", 
     layout="wide",
-    page_icon="🖥️"
+    page_icon="🖥️",
 )
 
 # ---------- Dane ----------
@@ -77,8 +77,8 @@ if "gender" in df.columns:
     df["gender"] = df["gender"].apply(_map_gender)
 
 # ---------- Sidebar: filtry ----------
-st.sidebar.header("⚙️ Ustawienia")
-k_choice = st.sidebar.slider("Liczba klastrów", 1, 10, 5, 1)
+st.sidebar.header("grepuj nerdów")
+k_choice = st.sidebar.slider("liczba klastrów", 1, 10, 5, 1)
 
 def multiselect_filter(df, col, label=None):
     if col in df.columns:
@@ -89,37 +89,39 @@ def multiselect_filter(df, col, label=None):
     return df
 
 df_f = df.copy()
-# kategoryczne
-df_f = multiselect_filter(df_f, "industry", "Branża")
-df_f = multiselect_filter(df_f, "fav_place", "Ulubione miejsce")
-df_f = multiselect_filter(df_f, "edu_level", "Wykształcenie")
-df_f = multiselect_filter(df_f, "gender", "Płeć")
-df_f = multiselect_filter(df_f, "fav_animals", "Ulubione zwierzę")
-df_f = multiselect_filter(df_f, "city", "Miasto")
+# kategoryczne - ORYGINALNE NAZWY
+df_f = multiselect_filter(df_f, "industry", "industry")
+df_f = multiselect_filter(df_f, "fav_place", "fav_place") 
+df_f = multiselect_filter(df_f, "edu_level", "edu_level")
+df_f = multiselect_filter(df_f, "gender", "gender")
+df_f = multiselect_filter(df_f, "fav_animals", "fav_animals")
 
-with st.sidebar.expander("Parametry jądra"):
-    raw_cols = [
-        "hobby_movies","hobby_sport","hobby_art","hobby_other","hobby_video_games",
-        "learning_pref_books","learning_pref_offline_courses","learning_pref_personal_projects",
-        "learning_pref_teaching","learning_pref_teamwork","learning_pref_workshop","learning_pref_chatgpt",
-        "motivation_challenges","motivation_career","motivation_creativity_and_innovation",
-        "motivation_money_and_job","motivation_personal_growth","motivation_remote",
-    ]
-    binary_cols = list(dict.fromkeys(raw_cols))
+st.sidebar.markdown("---")  # oddzielenie
 
-    for i, col in enumerate(binary_cols):
-        if col in df_f.columns:
-            s = pd.to_numeric(df_f[col], errors="coerce")
-            choice = st.sidebar.radio(
-                col,
-                ["Wszystko","tak","nie"],
-                index=0,
-                horizontal=True,
-                key=f"radio_bin_{col}_{i}"
-            )
-            if choice != "Wszystko":
-                want = 1 if choice == "tak" else 0
-                df_f = df_f[s == want]
+# bez expandera - bezpośrednio w sidebarze
+raw_cols = [
+    "hobby_movies","hobby_sport","hobby_art","hobby_other","hobby_video_games",
+    "learning_pref_books","learning_pref_offline_courses","learning_pref_personal_projects",
+    "learning_pref_teaching","learning_pref_teamwork","learning_pref_workshop","learning_pref_chatgpt",
+    "motivation_challenges","motivation_career","motivation_creativity_and_innovation",
+    "motivation_money_and_job","motivation_personal_growth","motivation_remote",
+]
+binary_cols = list(dict.fromkeys(raw_cols))
+
+for col in binary_cols:  # 👈 USUŃ WCIIĘCIE - ma być na poziomie 0
+    if col in df_f.columns:
+        s = pd.to_numeric(df_f[col], errors="coerce")
+        choice = st.sidebar.radio(
+            col,
+            ["Wszystko","tak","nie"],
+            index=0,
+            horizontal=True,
+            key=f"radio_{col}"  # 👈 USUŃ _{i} bo nie ma enumerate
+        )
+        if choice != "Wszystko":
+            want = 1 if choice == "tak" else 0
+            df_f = df_f[df_f[col] == want]  # 👈 Popraw filtrowanie
+
 
 if df_f.empty:
     st.write("you weirdo as fuck XD")
@@ -185,37 +187,158 @@ if df_clust.empty:
     st.write("you weirdo as fuck XD")
     st.stop()
 
-mode_series = df_clust["cluster"].mode()
-if mode_series.empty:
-    st.write("you weirdo as fuck XD")
-    st.stop()
+bin_cols = list(dict.fromkeys(raw_cols))
+bin_present = [c for c in bin_cols if c in df_clust.columns]
 
-selected_cluster = int(mode_series.iloc[0])
-same_cluster = df_clust[df_clust["cluster"] == selected_cluster]
+# ===== OPIS KLASTRU — DeepSeek (tylko śmieszek-linuxiarz) =====
 
-st.sidebar.header("📌 Wybrana grupa")
-st.sidebar.write(f"Automatycznie wybrano **grupę {selected_cluster}**.")
-st.sidebar.metric("Liczba osób w grupie", len(same_cluster))
+if not DEEPSEEK_KEY:
+    st.warning("⚠️ Brak klucza API DeepSeek. Dodaj DEEPSEEK_API_KEY do zmiennych środowiskowych.")
+    st.info("💡 Tip: Utwórz plik .env z DEEPSEEK_API_KEY=twój_klucz")
+else:
+    # Cache nazw grup na 24h
+    @st.cache_data(ttl=86400, show_spinner=False)
+    def generate_group_name(cluster_id, cluster_data, bin_present):
+        """Generuje kreatywną nazwę dla grupy"""
+        try:
+            # Przygotuj dane dla promptu
+            preview_rows = []
+            for c in bin_present:
+                s = pd.to_numeric(cluster_data[c], errors="coerce")
+                p = float((s == 1).mean() * 100) if s.notna().any() else 0.0
+                preview_rows.append({"feature": c, "share_of_1_pct": round(p, 1)})
+            
+            preview_rows.sort(key=lambda r: r["share_of_1_pct"], reverse=True)
+            
+            user_prompt = f"""
+Grupa {cluster_id} ({len(cluster_data)} osób) ma następujące charakterystyki:
+{chr(10).join([f"- {r['feature']}: {r['share_of_1_pct']}%" for r in preview_rows[:5]])}
 
-# ---------- Sekcja główna ----------
-st.header("nerdy jak ty XD")
-if same_cluster.empty:
+Wymyśl nazwę dla tej grupy (max 2-3 słowa) tak jak by ją nazwał Linus Torvalds 
+Nazwa powinna być po polsku i nawiązywać do cech grupy.
+Odpowiedz tylko nazwą, bez dodatkowych komentarzy.
+"""
+
+            body = {
+                "model": DEEPSEEK_MODEL,
+                "stream": False,
+                "temperature": 0.9,
+                "max_tokens": 30,
+                "messages": [
+                    {"role": "system", "content": "Jesteś kreatywnym nazywaczem grup. Twórz zabawne, trafne nazwy."},
+                    {"role": "user", "content": user_prompt},
+                ],
+            }
+
+            response = requests.post(
+                f"{DEEPSEEK_BASE}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json=body,
+                timeout=15,
+            )
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            name = result["choices"][0]["message"]["content"].strip()
+            # Usuń cudzysłowy i niechciane znaki
+            name = name.replace('"', '').replace("'", "").strip()
+            return name
+            
+        except Exception:
+            # Fallback do numeru grupy jeśli API nie działa
+            return f"Grupa {cluster_id}"
+
+    # Cache odpowiedzi API na 1 godzinę
+    @st.cache_data(ttl=3600, show_spinner=False)
+    def generate_cluster_description(cluster_id, cluster_data, bin_present):
+        """Generuje opis klastra w stylu linus torvalds"""
+        try:
+            # Przygotuj dane dla promptu
+            preview_rows = []
+            for c in bin_present:
+                s = pd.to_numeric(cluster_data[c], errors="coerce")
+                p = float((s == 1).mean() * 100) if s.notna().any() else 0.0
+                preview_rows.append({"feature": c, "share_of_1_pct": round(p, 1)})
+            
+            preview_rows.sort(key=lambda r: r["share_of_1_pct"], reverse=True)
+            
+            user_prompt = f"""
+Grupa {cluster_id} ({len(cluster_data)} osób) ma takie staty:
+{chr(10).join([f"- {r['feature']}: {r['share_of_1_pct']}%" for r in preview_rows[:8]])}
+
+Opisz tę grupę w stylu w jakim zrobił by to Linus Torvalds. Max 5 zdań. 
+Pisz tak jakbyś gadał na IRCu czy forum linuxowym. Używaj języka mieszanego linuxowo polskiego. Na koniec dodaj ocenę w skali 1-10 jaką wystawiłby Linus Torvalds w formacie:
+Linus Torvalds rate: X/10
+"""
+
+            # Wywołanie API
+            body = {
+                "model": DEEPSEEK_MODEL,
+                "stream": False,
+                "temperature": 0.85,
+                "max_tokens": 300,
+                "messages": [
+                    {"role": "system", "content": "Jesteś symulacją Linusa Torvaldsa."},
+                    {"role": "user", "content": user_prompt},
+                ],
+            }
+
+            response = requests.post(
+                f"{DEEPSEEK_BASE}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json=body,
+                timeout=30,
+            )
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            return result["choices"][0]["message"]["content"].strip()
+            
+        except requests.exceptions.ConnectionError:
+            return "❌ Brak połączenia z internetem"
+        except requests.exceptions.Timeout:
+            return "⏰ Timeout - API nie odpowiedziało w czasie"
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 401:
+                return "🔑 Błąd autoryzacji - sprawdź klucz API"
+            elif e.response.status_code == 402:
+                return "💳 Wymagana płatność - dodaj kartę w DeepSeek"
+            elif e.response.status_code == 429:
+                return "🚫 Limit rate exceeded - poczekaj chwilę"
+            else:
+                return f"❌ Błąd HTTP {e.response.status_code}"
+        except Exception as e:
+            return f"⚠️ Nieoczekiwany błąd: {str(e)}"
+
+    if st.button("Kliknij aby dowiedzieć się co Linus Torvalds myśli o tej grupie", type="primary"):
+        with st.spinner("Linus myśli..."):
+            description = generate_cluster_description(0, df_clust, bin_present)
+            group_name = generate_group_name(0, df_clust, bin_present)
+        
+        # Wyświetl wynik
+        if description.startswith(("❌", "⏰", "🔑", "💳", "🚫", "⚠️")):
+            st.error(description)
+        else:
+            st.markdown(f"# 🎯 {group_name}")  # DUŻY NAPIS
+            st.write(description)
+ 
+
+# ---------- Tabela z osobami ----------
+if df_clust.empty:
     st.write("you weirdo as fuck XD")
 else:
-    st.write(f"Znaleziono {len(same_cluster)} osób podobnych do Ciebie!")
-    st.dataframe(same_cluster)
+    st.write(f"zgrepowano {len(df_clust)} nerdów podobnych do ciebie!")
+    st.dataframe(df_clust)
 
-# ---------- Charakterystyka grup ----------
-st.header("demony grupowania")
-clusters_available = sorted(df_clust["cluster"].unique().tolist())
-default_idx = clusters_available.index(selected_cluster) if selected_cluster in clusters_available else 0
-cluster_desc = st.selectbox("Wybierz grupę do opisania:", options=clusters_available, index=default_idx)
-
-cluster_data = df_clust[df_clust["cluster"] == cluster_desc]
-st.write(f"**Grupa {int(cluster_desc)}** — {len(cluster_data)} osób")
-
-st.subheader("🔧 Preferencje i motywacje (udział 1 = TAK)")
-
+# Tabelki pod opisem - dla tych co nie lubią czytać
 raw_cols = [
     "hobby_movies","hobby_sport","hobby_art","hobby_other","hobby_video_games",
     "learning_pref_books","learning_pref_offline_courses","learning_pref_personal_projects",
@@ -224,144 +347,52 @@ raw_cols = [
     "motivation_money_and_job","motivation_personal_growth","motivation_remote",
 ]
 bin_cols = list(dict.fromkeys(raw_cols))
-bin_present = [c for c in bin_cols if c in cluster_data.columns]
+bin_present = [c for c in bin_cols if c in df_clust.columns]
 
 if bin_present:
-    rows = []
+    # Przygotuj dane
+    names = []
+    values = []
     for c in bin_present:
-        s = pd.to_numeric(cluster_data[c], errors="coerce")
+        s = pd.to_numeric(df_clust[c], errors="coerce")
         p = float((s == 1).mean() * 100) if s.notna().any() else 0.0
-        rows.append((c, f"{p:.0f}%"))
-    st.table(pd.DataFrame(rows, columns=["feature", "share_of_1"]))
+        names.append(c)
+        values.append(p)
+    
+    # Tworzymy DataFrame
+    plot_df = pd.DataFrame({"param": names, "%": values})
+    plot_df = plot_df.sort_values("%", ascending=True)
+    
+    # Tworzymy wykres - MAX SUROWE
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # USUŃ WSZYSTKO CO ZBĘDNE
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.set_facecolor('none')
+    
+    # USUŃ OSIE I TICKI
+    ax.tick_params(axis='x', which='both', bottom=False, labelbottom=False)  # 👈 usuń oś X
+    ax.tick_params(axis='y', which='both', left=False, labelleft=True)  # tylko etykiety Y
+    
+    # Słupki
+    bars = ax.barh(plot_df["param"], plot_df["%"], color='#1f77b4', height=0.6)
+    ax.set_xlim(0, 100)
+    
+    # Tylko wartości na słupkach - bez tytułów, bez osi
+    for i, v in enumerate(plot_df["%"]):
+        ax.text(v + 1, i, f"{v:.0f}%", va='center', fontweight='bold', fontsize=10)
+    
+    st.pyplot(fig)
+
 else:
     st.info("Brak pól binarnych do podsumowania.")
-
-st.markdown("---")
-st.caption("Kto to czyta ten mieszka w piwnicy XD")
-st.markdown("---")
-if st.button("man demony-grupowania"):
-    with st.expander("📖 MANUAL: demony-grupowania", expanded=True):
-        st.markdown("""
-        ### NAZWA
-        **demony-grupowania** – demon grupowania użytkowników na podstawie podobieństwa cech
-
-        ### SKŁADNIA
-        `demony-grupowania [--algorithm=kmeans] [--cluster=5] [--verbose]`
-
-        ### OPIS
-        Demon działający w tle, który grupuje użytkowników na klastry używając niekontrolowanego uczenia maszynowego.  
-        Działa jak usługa systemowa – nie wymaga interakcji użytkownika.
-
-        ### OPCJE
-        - `--algorithm`   wybór algorytmu (domyślnie: kmeans)  
-        - `--cluster`     liczba klastrów (domyślnie: 5)  
-        - `--verbose`     szczegółowe logi do `/var/log/nerdapp/grupowanie.log`
-
-        ### PRZYKŁADY
-        `demony-grupowania --cluster=5 --verbose`  
-        Grupuje użytkowników na 5 klastrów z pokazywaniem logów.
-
-        ### AUTOR
-        NerdApp 1.0 – napisane przez BrudnaHara na Debianie
-        """)
-        st.markdown("""
-<style>
-    .stExpander {
-        background-color: black;
-        color: #00ff00;
-        font-family: Monospace;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ===== HYBRYDA LLM (Analiza vs Śmieszek) =====
-st.header("🧠 Opis klastru — DeepSeek (hybryda)")
-
-if not DEEPSEEK_KEY:
-    st.info("Brak DEEPSEEK_API_KEY w środowisku.")
-else:
-    mode = st.radio("Tryb odpowiedzi", ["Analiza", "Śmieszek"], horizontal=True)
-
-    # 🔥 TUTAJ ZMIENIASZ PROMPT
-    if mode == "Analiza":
-        SYS_PROMPT = (
-            "Jesteś poważnym analitykiem danych. "
-            "Podaj szczegółowy, techniczny opis klastra. "
-            "Bez żartów. Po polsku. Max 10 zdań."
-        )
-        TEMPERATURE = 0.25   # 🔥 zmień tu temperaturę
-        MAX_TOKENS = 500     # 🔥 zmień tu max tokeny
-    else:
-        SYS_PROMPT = (
-            "Opisz grupę użytkowników w zabawny, ironiczny sposób. "
-            "Po polsku. Max 2 zdania. "
-            "Nie bądź poważny."
-        )
-        TEMPERATURE = 0.7    # 🔥 zmień tu temperaturę
-        MAX_TOKENS = 150     # 🔥 zmień tu max tokeny
-
-    preview_rows = []
-    for c in bin_present:
-        s = pd.to_numeric(cluster_data[c], errors="coerce")
-        p = float((s == 1).mean() * 100) if s.notna().any() else 0.0
-        preview_rows.append({"feature": c, "share_of_1_pct": round(p, 1)})
-    preview_rows.sort(key=lambda r: r["share_of_1_pct"], reverse=True)
-    payload_user = {
-        "cluster_id": int(cluster_desc),
-        "n_in_group": int(len(cluster_data)),
-        "top_binary_features": preview_rows[:12],
-    }
-
-    if st.button("Generuj opis klastru (stream)"):
-        body = {
-            "model": DEEPSEEK_MODEL,
-            "stream": True,
-            "temperature": TEMPERATURE,
-            "max_tokens": MAX_TOKENS,
-            "messages": [
-                {"role": "system", "content": SYS_PROMPT},
-                {"role": "user", "content": json.dumps(payload_user, ensure_ascii=False)},
-            ],
-        }
-
-        placeholder = st.empty()
-        buf = []
-
-        try:
-            with requests.post(
-                f"{DEEPSEEK_BASE}/chat/completions",
-                headers={"Authorization": f"Bearer {DEEPSEEK_KEY}", "Content-Type": "application/json"},
-                json=body,
-                stream=True,
-                timeout=90,
-            ) as r:
-                r.raise_for_status()
-                for line in r.iter_lines(decode_unicode=True):
-                    if not line:
-                        continue
-                    if line.startswith("data: "):
-                        chunk = line[len("data: "):].strip()
-                        if chunk == "[DONE]":
-                            break
-                        try:
-                            obj = json.loads(chunk)
-                            delta = obj["choices"][0]["delta"].get("content", "")
-                            if delta:
-                                buf.append(delta)
-                                placeholder.write("".join(buf) + "▌")
-                        except Exception:
-                            continue
-            # finalny tekst
-            placeholder.write("".join(buf))
-        except requests.HTTPError as e:
-            st.error(f"HTTP {e.response.status_code}: {e.response.text[:300]}")
-        except Exception as e:
-            st.error(f"Błąd: {e}")
-        
-
+    
 # Easter egg
 st.markdown("---")
-with st.expander("🖥️ **Konsola pomocy (wpisz komendę)**"):
+with st.expander("🖥️ **konsola pomocy (wpisz komendę)**"):
     help_input = st.text_input("$", value="", key="help_input", placeholder="wpisz 'help' lub 'man'")
     
     if help_input.strip() == "help":
@@ -395,11 +426,13 @@ AUTOR:
         """)
     
     elif help_input.strip() == "grepuj_nerdów":
-        st.success("Uruchamiam grepowanie nerdów...")
-        st.write("🔍 Przełącz się na zakładkę 'grepuj nerdów' powyżej!")
+        st.success("uruchamiam grepowanie nerdów...")
+        st.write("🔍 przełącz się na zakładkę 'grepuj nerdów' powyżej!")
     
     elif help_input.strip() == "exit":
-        st.warning("Nie ma wyjścia z pomocą – to jest Streamlit, nie prawdziwy terminal! 😉")
+        st.warning("nie ma wyjścia z pomocą – to jest Streamlit, nie prawdziwy terminal! 😉")
     
     elif help_input.strip() != "":
-        st.error(f"Komenda nieznana: '{help_input}'. Wpisz 'help' aby uzyskać pomoc.")
+        st.error(f"Komenda nieznana: '{help_input}'. wpisz 'help' aby uzyskać pomoc.")
+
+st.caption("Kto to czyta ten mieszka w piwnicy XD")
