@@ -5,3 +5,15 @@ app.py
 *.csv
 *.db
 *.png
+venv/
+*.log
+streamlit_app_*.py
+Untitled*.ipynb
+*.csv
+!35__welcome_survey_cleaned.csv
+zad_domowe__*.png
+zad_domowe__clients.db
+zad_domowe__products.csv
+deep_seek_python.txt
+osint.txt
+
