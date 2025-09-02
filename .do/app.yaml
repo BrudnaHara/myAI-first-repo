@@ -1,0 +1,10 @@
+name: grepuj-nerdow
+services:
+- name: web
+  dockerfile_path: Dockerfile
+  source_dir: /
+  run_command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+  environment_slug: python
+  envs:
+  - key: DEEPSEEK_API_KEY
+    value: ${DEEPSEEK_API_KEY}
