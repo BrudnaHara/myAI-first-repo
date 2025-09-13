@@ -14,21 +14,5 @@ Aplikacja webowa zbudowana w **Streamlit**, uruchamiana na **Streamlit Community
 - Python 3.9+  
 - Zawartość `requirements.txt` (Streamlit, pandas, scikit-learn, matplotlib, requests, numpy)
 
-## Uruchamianie lokalne
 
-```bash
-git clone https://github.com/<twoje-repo>
-cd <twoje-repo>
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
 
-Deploy
-
-Repozytorium jest połączone ze Streamlit Community Cloud.
-W panelu wystarczy wskazać plik streamlit_app.py i dodać sekrety
-DEEPSEEK_API_KEY = "TWÓJ_KLUCZ"
-
-Projekt łączy klasyczne ML (klasteryzacja KMeans) z nowoczesnym LLM (DeepSeek) w aplikacji chmurowej.
-export DEEPSEEK_API_KEY="TWÓJ_KLUCZ"
-streamlit run streamlit_app.py
